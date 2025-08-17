@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-header {
+        margin-bottom: 3rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    
+    .contact-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background-color: #A0D889;
+    }
+    
+    .contact-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .contact-info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #A0D889;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <h1 class="contact-header fw-bold">Contact Us</h1>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4 mb-lg-0 slide-in-left">
+            <div class="contact-card card">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 fw-bold text-mopia">Get in Touch</h3>
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-mopia">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-5 slide-in-right">
+            <div class="contact-card card h-100">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 fw-bold text-mopia">Contact Information</h3>
+                    
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Address</h5>
+                            <p class="mb-0">Maharlika Highway, Lucena City, Philippines, 4301</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Phone</h5>
+                            <p class="mb-0">(123) 456-7890</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Email</h5>
+                            <p class="mb-0">mopiacleanersph@gmail.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-clock-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Business Hours</h5>
+                            <p class="mb-0">Monday-Sunday, 7am-5pm</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5 class="fw-bold mb-3">Follow Us</h5>
+                        <div class="d-flex">
+                            <a href="https://www.facebook.com/MopiaCleanersPH"  target="_blank" class="btn btn-outline-secondary rounded-circle me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                            <a href="https://www.instagram.com/mopiacleanersph/"  target="_blank" class="btn btn-outline-secondary rounded-circle me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="https://g.co/kgs/8Mttw6R" target="_blank" class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-google"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

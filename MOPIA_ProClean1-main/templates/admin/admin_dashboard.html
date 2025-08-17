@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+        width: 250px;
+        background-color: #343a40;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-header {
+        padding: 20px;
+        background-color: #8DC448;
+        text-align: center;
+    }
+    
+    .sidebar-logo {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .sidebar-nav {
+        margin-top: 30px;
+    }
+    
+    .sidebar-nav .nav-item {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: #ced4da;
+        padding: 12px 20px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-nav .nav-link.active,
+    .sidebar-nav .nav-link:hover {
+        background-color: #8DC448;
+        color: white;
+        border-radius: 0;
+    }
+    
+    /* Main content area */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+    
+    /* Dashboard cards */
+    .dashboard-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+    
+    .dashboard-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+    }
+    
+    /* Stats cards */
+    .stats-card {
+        border-radius: 10px;
+        background-color: white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .stats-card .number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #8DC448;
+    }
+    
+    .stats-card .label {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    /* Buttons */
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: white;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #7ab33a;
+        border-color: #7ab33a;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    /* Status badges */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-confirmed {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-completed {
+        background-color: #e2eafc;
+        color: #0a58ca;
+    }
+    
+    .status-cancelled {
+        background-color: #e2e3e5;
+        color: #41464b;
+    }
+    
+    /* Table styles */
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+    
+    /* Service form */
+    .service-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    /* Animation */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Booking filter styles */
+    .booking-filter {
+        transition: all 0.3s ease;
+    }
+    
+    .booking-filter.active {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: white;
+    }
+
+    /* --- RESPONSIVE ADDITIONS START HERE --- */
+    @media (max-width: 991.98px) {
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: unset;
+        }
+        .main-content {
+            margin-left: 0;
+            padding: 15px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .dashboard-card,
+        .service-form,
+        .stats-card {
+            padding: 12px;
+        }
+        .dashboard-card-header,
+        .dashboard-card .card-body {
+            padding: 10px 12px;
+        }
+        .sidebar-header {
+            padding: 12px;
+        }
+        .sidebar-nav .nav-link {
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+        .main-content h1 {
+            font-size: 1.4rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .stats-card .number {
+            font-size: 22px;
+        }
+        .stats-card .label {
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .sidebar-header h4 {
+            font-size: 1.1rem;
+        }
+        .btn,
+        .btn-mopia,
+        .btn-outline-secondary {
+            font-size: 0.95rem;
+            padding: 8px 12px;
+        }
+        .dashboard-card-header h5 {
+            font-size: 1rem;
+        }
+    }
+    /* --- RESPONSIVE ADDITIONS END HERE --- */
+</style>
+{% endblock %}
+
+<!-- Override the navbar -->
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="mb-0">Mopia Admin</h4>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                  <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin_assign_service' %}">
+                    <i class="bi bi-person-check"></i> Assign Services
+                </a>
+            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_bookings' %}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_services' %}">
+                        <i class="bi bi-tools"></i> Services
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_customers' %}">
+                        <i class="bi bi-people"></i> Customers
+                    </a>
+                </li>
+                                  <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-person-check"></i> Logistics
+                </a>
+            </li>
+                              <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-person-check"></i> Inventory
+                </a>
+            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_settings' %}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li class="nav-item mt-5">
+                    <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Dashboard Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0" id="section-title">Dashboard Overview</h1>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> View Site
+            </a>
+        </div>
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'warning' in message.tags %}
+                    <div class="alert alert-warning alert-dismissible fade show mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Notice:</strong> {{ message }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Dashboard Content Sections -->
+        <div id="dashboard-overview" class="dashboard-section">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ total_bookings }}</div>
+                        <div class="label">Total Bookings</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ pending_bookings }}</div>
+                        <div class="label">Pending Bookings</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ completed_bookings }}</div>
+                        <div class="label">Completed Bookings</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Bookings with Filters -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                    <div>
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary active booking-filter" data-filter="all">All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="pending">Pending</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="confirmed">Confirmed</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="completed">Completed</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="cancelled">Cancelled</button>
+                        </div>
+                        <a href="{% url 'admin_bookings' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Date & Time</th>
+                                    {% if created_at_exists %}
+                                    <th>Created At</th>
+                                    {% endif %}
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr class="booking-row" data-status="{{ booking.status }}">
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.customer.name }}</td>
+                                    <td>{{ booking.service.name }}</td>
+                                    <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                                    {% if created_at_exists %}
+                                    <td>{{ booking.created_at|date:"M d, Y" }} {{ booking.created_at|time:"g:i A" }}</td>
+                                    {% endif %}
+                                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr class="no-bookings-row">
+                                    <td colspan="{% if created_at_exists %}6{% else %}5{% endif %}" class="text-center py-4">No bookings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination for recent bookings -->
+                    <div class="d-flex justify-content-center py-3">
+                        <nav aria-label="Recent bookings pagination">
+                            <ul class="pagination">
+                                {% if recent_bookings.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo; First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ recent_bookings.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">&laquo; First</a>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ recent_bookings.number }} of {{ recent_bookings.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if recent_bookings.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ recent_bookings.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ recent_bookings.paginator.num_pages }}">Last &raquo;</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Next</a>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Last &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bookings Section - Removing duplicate table -->
+        <div id="bookings-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <!-- ... -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

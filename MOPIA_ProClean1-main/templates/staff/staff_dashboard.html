@@ -1,0 +1,1231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background-color: #f8f9fa; }
+    
+    /* Layout */
+    .dashboard-wrapper { display: flex; min-height: 100vh; }
+    .main-content { flex: 1; margin-left: 250px; padding: 20px; }
+    
+    /* Sidebar */
+    .sidebar { width: 250px; background-color: #343a40; color: white; position: fixed; height: 100vh; overflow-y: auto; }
+    .sidebar-header { padding: 20px; background-color: #8DC448; text-align: center; }
+    .sidebar-nav { margin-top: 30px; }
+    .sidebar-nav .nav-item { width: 100%; margin-bottom: 5px; }
+    .sidebar-nav .nav-link { color: #ced4da; padding: 12px 20px; transition: all 0.3s; display: flex; align-items: center; }
+    .sidebar-nav .nav-link i { margin-right: 10px; font-size: 1.1rem; }
+    .sidebar-nav .nav-link.active, .sidebar-nav .nav-link:hover { background-color: #8DC448; color: white; border-radius: 0; }
+    
+    /* Cards */
+    .dashboard-card { border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+                     transition: all 0.3s ease; border: none; margin-bottom: 20px; }
+    .dashboard-card-header { background-color: #f8f9fa; border-bottom: 1px solid #eee; padding: 15px 20px; }
+    
+    /* Stat cards */
+    .stats-card { border-radius: 10px; background-color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+                transition: all 0.3s ease; border: none; padding: 20px; text-align: center; margin-bottom: 20px; }
+    .stats-card .number { font-size: 28px; font-weight: 700; color: #8DC448; }
+    .stats-card .label { font-size: 14px; color: #666; }
+    
+    /* Buttons */
+    .btn-mopia { background-color: #8DC448; border-color: #8DC448; color: #333333; border-radius: 4px;
+               padding: 10px 20px; font-weight: 500; transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; }
+    .btn-mopia:hover { background-color: #22540D; border-color: #333333; color: white; 
+                     transform: translateY(-3px); box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3); }
+    
+    /* Status badges */
+    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status-pending { background-color: #ffeeba; color: #856404; }
+    .status-confirmed { background-color: #d4edda; color: #155724; }
+    .status-completed { background-color: #c3e6cb; color: #0f401a; }
+    .status-cancelled { background-color: #f8d7da; color: #721c24; }
+    
+    /* Tables */
+    .table-hover tbody tr:hover { background-color: rgba(141, 196, 72, 0.1); }
+    
+    /* Animations */
+    .fade-in { opacity: 0; transform: translateY(20px); animation: fadeIn 0.8s forwards; }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    
+    /* Filter buttons */
+    .booking-filter { transition: all 0.3s ease; }
+    .booking-filter.active { background-color: #8DC448; border-color: #8DC448; color: white; }
+    
+    /* Calendar */
+    #calendar { height: 600px; }
+    .fc-event { cursor: pointer; }
+    
+    /* Details display */
+    .booking-details { padding: 15px; border-radius: 8px; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .booking-details-header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+    .detail-row { display: flex; margin-bottom: 8px; }
+    .detail-label { flex: 0 0 120px; font-weight: 500; }
+    .detail-value { flex: 1; }
+    
+    /* Service cards */
+    .service-card { transition: all 0.3s ease; height: 100%; }
+    .service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .service-card.primary-service { border-left: 4px solid #28a745; }
+    .primary-service-badge { background-color: #28a745; color: white; font-size: 12px; padding: 3px 8px; border-radius: 12px; }
+    
+    /* Clock status indicators */
+    .clock-status { padding: 4px 8px; font-size: 11px; border-radius: 12px; display: inline-block; }
+    .clock-in { background-color: #cff4fc; color: #055160; }
+    .clock-out { background-color: #d1e7dd; color: #0f5132; }
+    .work-duration { background-color: #e2e3e5; color: #41464b; }
+    
+    /* Qualified service styling */
+    tr.qualified-service {
+        background-color: rgba(160, 216, 137, 0.1); 
+    }
+    tr.qualified-service:hover {
+        background-color: rgba(160, 216, 137, 0.2);
+    }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="mb-0">Mopia Staff</h4>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" href="#" id="overview-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="schedule-link"><i class="bi bi-calendar3"></i> My Schedule</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="assignments-link"><i class="bi bi-list-check"></i> My Assignments</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="services-link"><i class="bi bi-tools"></i> My Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="bookings-link"><i class="bi bi-book"></i> All Bookings</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="profile-link"><i class="bi bi-person"></i> My Profile</a></li>
+                <li class="nav-item mt-5"><a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Dashboard Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0" id="section-title">Staff Dashboard</h1>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> View Site</a>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Dashboard Overview Section -->
+        <div id="dashboard-overview" class="dashboard-section">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ today_bookings }}</div>
+                        <div class="label">Today's Assignments</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ assigned_bookings }}</div>
+                        <div class="label">My Assignments</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ completed_bookings }}</div>
+                        <div class="label">Completed Jobs</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- My Services Summary -->
+            <div class="dashboard-card mb-4">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My Services</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary" id="view-all-services">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if assigned_services %}
+                        <div class="list-group list-group-flush">
+                            {% for service in assigned_services|slice:":3" %}
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ service.service.name }}</h6>
+                                        <small class="text-muted">{{ service.service.description|truncatechars:60 }}</small>
+                                    </div>
+                                    {% if service.is_primary %}
+                                        <span class="badge bg-success">Primary</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center">
+                            <p class="mb-0">No services assigned yet. Please contact the administrator.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+           
+            
+            <!-- Upcoming Assignments -->
+            <div class="dashboard-card mt-4">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Upcoming Assignments</h5>
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary active booking-filter" data-filter="all">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="pending">Pending</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary booking-filter" data-filter="confirmed">Confirmed</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Customer</th><th>Service</th><th>Date & Time</th><th>Address</th><th>Status</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in upcoming_bookings %}
+                                <tr class="booking-row" data-status="{{ booking.status }}">
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.customer.name }}</td>
+                                    <td>{{ booking.service.name }}</td>
+                                    <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                                    <td>{{ booking.customer.address|truncatechars:30 }}</td>
+                                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary view-booking" 
+                                            data-id="{{ booking.id }}" data-bs-toggle="modal" data-bs-target="#viewBookingModal">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="no-bookings-row">
+                                    <td colspan="7" class="text-center py-4">No upcoming assignments.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Schedule Section -->
+        <div id="schedule-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="mb-0">My Work Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Assignments Section -->
+        <div id="assignments-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All My Assignments</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary active assignment-filter" data-filter="all">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary assignment-filter" data-filter="confirmed">Active</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary assignment-filter" data-filter="completed">Completed</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Customer</th><th>Service</th><th>Date & Time</th>
+                                    <th>Status</th><th>Clock</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in all_assignments %}
+                                <tr class="assignment-row" data-status="{{ booking.status }}">
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.customer.name }}</td>
+                                    <td>{{ booking.service.name }}</td>
+                                    <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                                    <td>
+                                      {% if booking.clock_in and booking.clock_out %}
+                                        <span class="clock-status work-duration">{{ booking.get_duration|default:'0' }} hrs</span>
+                                      {% elif booking.clock_in %}
+                                        <span class="clock-status clock-in">In: {{ booking.clock_in|date:"M d, Y h:i A" }}</span>
+                                      {% else %}
+                                        <span class="text-muted">Not started</span>
+                                      {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary view-booking" 
+                                                data-id="{{ booking.id }}" data-bs-toggle="modal" data-bs-target="#viewBookingModal">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                            {% if booking.status == 'confirmed' %}
+                                                {% if not booking.clock_in %}
+                                                    <a href="{% url 'staff_clock_in' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-clock"></i> Clock In
+                                                    </a>
+                                                {% elif not booking.clock_out %}
+                                                    <a href="{% url 'staff_clock_out' booking.id %}" class="btn btn-sm btn-outline-warning">
+                                                        <i class="bi bi-clock-history"></i> Clock Out
+                                                    </a>
+                                                {% endif %}
+                                                <form method="post" action="{% url 'update_booking_status' %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                                    <input type="hidden" name="status" value="completed">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                                        <i class="bi bi-check-lg"></i> Complete
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No assignments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Services Section -->
+        <div id="services-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="mb-0">My Assigned Services</h5>
+                </div>
+                <div class="card-body">
+                    {% if assigned_services %}
+                        <div class="row">
+                            {% for service in assigned_services %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100 service-card {% if service.is_primary %}primary-service{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="card-title">{{ service.service.name }}</h5>
+                                            {% if service.is_primary %}
+                                                <span class="primary-service-badge">Primary Service</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="card-text text-muted mb-2">
+                                            <i class="bi bi-clock"></i> {{ service.service.duration|default:"2" }} hours
+                                        </p>
+                                        <p class="card-text text-muted mb-3">
+                                            <i class="bi bi-cash"></i> ${{ service.service.price }}
+                                        </p>
+                                        <p class="card-text">{{ service.service.description|truncatechars:100 }}</p>
+                                        {% if service.notes %}
+                                        <hr>
+                                        <div class="mt-2">
+                                            <strong>Notes:</strong>
+                                            <p class="small mb-0">{{ service.notes }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            You don't have any services assigned yet. Please contact the administrator.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- All Bookings Section -->
+        <div id="bookings-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All System Bookings</h5>
+                    <div class="d-flex">
+                        <div class="input-group me-2" style="width: 250px;">
+                            <input type="text" id="booking-search" class="form-control form-control-sm" placeholder="Search bookings...">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" id="search-btn">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="my-services-only">
+                            <label class="form-check-label" for="my-services-only">
+                                Show only my services
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="all-bookings-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Customer</th><th>Service</th><th>Date & Time</th>
+                                    <th>Staff</th><th>Status</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">Loading bookings...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="d-flex justify-content-between align-items-center p-3">
+                            <span id="showing-entries">Showing 0 entries</span>
+                            <nav aria-label="Booking pagination">
+                                <ul class="pagination pagination-sm" id="booking-pagination"></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Profile Section -->
+        <div id="profile-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="mb-0">My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-4">
+                                <div style="width: 150px; height: 150px; background-color: #e9ecef; border-radius: 50%; 
+                                           display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                                    <i class="bi bi-person-fill" style="font-size: 80px; color: #adb5bd;"></i>
+                                </div>
+                                <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                                <p class="text-muted">Staff Member</p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <form method="post" action="{% url 'staff_profile_update' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="staff-first-name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="staff-first-name" name="first_name" value="{{ user.first_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="staff-last-name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="staff-last-name" name="last_name" value="{{ user.last_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="staff-email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="staff-email" name="email" value="{{ user.email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="staff-phone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="staff-phone" name="phone" value="{{ user.profile.phone|default:'' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="staff-current-password" class="form-label">Current Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="staff-current-password" name="current_password">
+                                        <button type="button" class="btn btn-outline-secondary toggle-password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="staff-new-password" class="form-label">New Password (leave blank to keep current)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="staff-new-password" name="new_password">
+                                        <button type="button" class="btn btn-outline-secondary toggle-password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-mopia">Update Profile</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Logout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">Are you sure you want to logout?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Booking Modal -->
+<div class="modal fade" id="viewBookingModal" tabindex="-1" aria-labelledby="viewBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Booking Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-details-header d-flex justify-content-between">
+                    <div>
+                        <h5 id="booking-service-name">Loading...</h5>
+                        <p class="mb-0" id="booking-date-time"></p>
+                    </div>
+                    <span id="booking-status-badge" class="status-badge"></span>
+                </div>
+                
+                <div class="row">
+                    <!-- Customer Info -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Customer Information</h6>
+                        <div class="detail-row">
+                            <div class="detail-label">Name:</div>
+                            <div class="detail-value" id="booking-customer-name"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Phone:</div>
+                            <div class="detail-value" id="booking-customer-phone"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Email:</div>
+                            <div class="detail-value" id="booking-customer-email"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Address:</div>
+                            <div class="detail-value" id="booking-customer-address"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Info -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Service Details</h6>
+                        <div class="detail-row">
+                            <div class="detail-label">Duration:</div>
+                            <div class="detail-value" id="booking-duration"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Price:</div>
+                            <div class="detail-value" id="booking-price"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Staff:</div>
+                            <div class="detail-value" id="booking-staff-count"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Time Tracking -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Time Tracking</h6>
+                        <div class="detail-row">
+                            <div class="detail-label">Clock In:</div>
+                            <div class="detail-value" id="booking-clock-in">Not clocked in yet</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Clock Out:</div>
+                            <div class="detail-value" id="booking-clock-out">Not clocked out yet</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Duration:</div>
+                            <div class="detail-value" id="booking-work-duration">Not completed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Notes</h6>
+                        <p id="booking-notes">No additional notes.</p>
+                    </div>
+                    <!-- Display Before and After Photos -->
+<div class="row mt-3">
+    <div class="col-md-6">
+        <h6>Before Cleaning</h6>
+        <img id="before-photo" src="" alt="Before Photo" class="img-fluid rounded" style="max-height: 200px; display: none;">
+        <p id="no-before-photo" class="text-muted">No before photo uploaded.</p>
+    </div>
+    <div class="col-md-6">
+        <h6>After Cleaning</h6>
+        <img id="after-photo" src="" alt="After Photo" class="img-fluid rounded" style="max-height: 200px; display: none;">
+        <p id="no-after-photo" class="text-muted">No after photo uploaded.</p>
+    </div>
+</div>
+                    <!-- Before and After Photos Upload -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6>Upload Before Photo</h6>
+                            <form id="upload-before-form" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="file" name="before_photo" accept="image/*" required>
+                                <button type="submit" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="bi bi-upload"></i> Upload Before
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Upload After Photo</h6>
+                            <form id="upload-after-form" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="file" name="after_photo" accept="image/*" required>
+                                <button type="submit" class="btn btn-sm btn-outline-success mt-2">
+                                    <i class="bi bi-upload"></i> Upload After
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div id="booking-action-buttons"><!-- Action buttons will be added dynamically --></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Navigation between sections
+        const sections = {
+            'overview-link': 'dashboard-overview',
+            'schedule-link': 'schedule-section',
+            'assignments-link': 'assignments-section',
+            'services-link': 'services-section',
+            'bookings-link': 'bookings-section',
+            'profile-link': 'profile-section'
+        };
+        
+        const sectionTitles = {
+            'overview-link': 'Staff Dashboard',
+            'schedule-link': 'My Schedule',
+            'assignments-link': 'My Assignments',
+            'services-link': 'My Services',
+            'bookings-link': 'All Bookings',
+            'profile-link': 'My Profile'
+        };
+        
+        // Set up navigation
+        Object.keys(sections).forEach(linkId => {
+            const link = document.getElementById(linkId);
+            if (link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active nav link
+                    document.querySelectorAll('.sidebar-nav .nav-link').forEach(navLink => {
+                        navLink.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Show selected section, hide others
+                    document.querySelectorAll('.dashboard-section').forEach(section => {
+                        section.classList.add('d-none');
+                    });
+                    document.getElementById(sections[linkId]).classList.remove('d-none');
+                    
+                    // Update section title
+                    document.getElementById('section-title').textContent = sectionTitles[linkId];
+                    
+                    // Initialize calendar if schedule section is selected
+                    if (linkId === 'schedule-link') {
+                        initializeCalendar();
+                    }
+                    
+                    // Load all bookings if bookings section is selected
+                    if (linkId === 'bookings-link') {
+                        loadAllBookings(1);
+                    }
+                });
+            }
+        });
+        
+        // View all services button
+        const viewAllServicesBtn = document.getElementById('view-all-services');
+        if (viewAllServicesBtn) {
+            viewAllServicesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('services-link').click();
+            });
+        }
+        
+        // Booking filters
+        document.querySelectorAll('.booking-filter').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.booking-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Apply filter
+                const filter = this.getAttribute('data-filter');
+                const rows = document.querySelectorAll('.booking-row');
+                let foundMatch = false;
+                
+                rows.forEach(row => {
+                    if (filter === 'all') {
+                        row.style.display = '';
+                        foundMatch = true;
+                    } else {
+                        const status = row.getAttribute('data-status');
+                        if (status === filter) {
+                            row.style.display = '';
+                            foundMatch = true;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Show no match message if needed
+                let noMatchingMessage = document.getElementById('no-matching-bookings');
+                if (!foundMatch) {
+                    if (!noMatchingMessage) {
+                        noMatchingMessage = document.createElement('tr');
+                        noMatchingMessage.id = 'no-matching-bookings';
+                        noMatchingMessage.innerHTML = `<td colspan="7" class="text-center py-4">No ${filter} bookings found.</td>`;
+                        document.querySelector('.booking-row')?.parentNode.appendChild(noMatchingMessage);
+                    } else {
+                        noMatchingMessage.innerHTML = `<td colspan="7" class="text-center py-4">No ${filter} bookings found.</td>`;
+                        noMatchingMessage.style.display = '';
+                    }
+                } else if (noMatchingMessage) {
+                    noMatchingMessage.style.display = 'none';
+                }
+            });
+        });
+        
+        // Assignment filters
+        document.querySelectorAll('.assignment-filter').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.assignment-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Apply filter
+                const filter = this.getAttribute('data-filter');
+                const rows = document.querySelectorAll('.assignment-row');
+                let foundMatch = false;
+                
+                rows.forEach(row => {
+                    if (filter === 'all') {
+                        row.style.display = '';
+                        foundMatch = true;
+                    } else {
+                        const status = row.getAttribute('data-status');
+                        if (status === filter) {
+                            row.style.display = '';
+                            foundMatch = true;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Show no match message if needed
+                let noMatchingMessage = document.getElementById('no-matching-assignments');
+                if (!foundMatch) {
+                    if (!noMatchingMessage) {
+                        noMatchingMessage = document.createElement('tr');
+                        noMatchingMessage.id = 'no-matching-assignments';
+                        noMatchingMessage.innerHTML = `<td colspan="7" class="text-center py-4">No ${filter} assignments found.</td>`;
+                        document.querySelector('.assignment-row')?.parentNode.appendChild(noMatchingMessage);
+                    } else {
+                        noMatchingMessage.style.display = '';
+                    }
+                } else if (noMatchingMessage) {
+                    noMatchingMessage.style.display = 'none';
+                }
+            });
+        });
+        
+        // Initialize Calendar
+        let calendar;
+        
+        function initializeCalendar() {
+            if (calendar) return; // Only initialize once
+            
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                slotMinTime: '08:00:00',
+                slotMaxTime: '20:00:00',
+                eventClick: function(info) {
+                    showBookingDetails(info.event.extendedProps.bookingId);
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    fetch('/staff/get_assignments/?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr)
+                        .then(response => response.json())
+                        .then(data => {
+                            const events = data.map(booking => ({
+                                title: booking.service_name,
+                                start: booking.date + 'T' + booking.time,
+                                end: calculateEndTime(booking.date, booking.time, booking.duration),
+                                backgroundColor: getStatusColor(booking.status),
+                                borderColor: getStatusColor(booking.status),
+                                extendedProps: {
+                                    bookingId: booking.id,
+                                    customerName: booking.customer_name,
+                                    address: booking.address,
+                                    status: booking.status
+                                }
+                            }));
+                            successCallback(events);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching events:', error);
+                            failureCallback(error);
+                        });
+                }
+            });
+            
+            calendar.render();
+        }
+        
+        function calculateEndTime(date, startTime, duration) {
+            const hours = parseInt(duration) || 2;
+            const start = new Date(date + 'T' + startTime);
+            const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
+            return end.toISOString();
+        }
+        
+        function getStatusColor(status) {
+            switch(status) {
+                case 'pending': return '#ffc107';
+                case 'confirmed': return '#28a745';
+                case 'completed': return '#17a2b8';
+                case 'cancelled': return '#dc3545';
+                default: return '#6c757d';
+            }
+        }
+        
+     // Replace your current formatPhilippinesTime function with this one
+function formatPhilippinesTime(timestamp) {
+    if (!timestamp) return 'Not available';
+    
+    try {
+        // Handle different timestamp formats that Django might send
+        
+        // First, check if we're already dealing with a formatted string from Django template
+        if (timestamp.includes('AM') || timestamp.includes('PM')) {
+            // Already formatted by Django template, return as is
+            return timestamp;
+        }
+        
+        // Format the timestamp as a proper date object
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) {
+            // Valid date object, format it nicely
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true
+            };
+            return date.toLocaleString('en-US', options);
+        }
+        
+        // If we get here, try manual parsing as last resort
+        const parts = timestamp.split(' ');
+        if (parts.length >= 2) {
+            // Get date part
+            const datePart = parts[0];
+            
+            // Get time part and ensure we have hours and minutes
+            let timePart = parts[1].split('.')[0]; // Remove milliseconds
+            const timeComponents = timePart.split(':');
+            if (timeComponents.length >= 2) {
+                let hours = parseInt(timeComponents[0]);
+                const minutes = timeComponents[1] || '00';  // Default to '00' if undefined
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12; // Convert to 12-hour format
+                
+                return `${datePart} ${hours}:${minutes} ${ampm}`;
+            }
+        }
+        
+        // If all parsing attempts fail, return the original
+        return timestamp;
+    } catch (e) {
+        console.error('Error displaying timestamp:', e, timestamp);
+        return timestamp; // Return original if there's an error
+    }
+}
+        
+        // View booking details
+        document.querySelectorAll('.view-booking').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookingId = this.getAttribute('data-id');
+                showBookingDetails(bookingId);
+            });
+        });
+        
+        function showBookingDetails(bookingId) {
+            fetch(`/staff/booking/${bookingId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Basic info
+                    document.getElementById('booking-service-name').textContent = data.service_name;
+                    document.getElementById('booking-date-time').textContent = `${data.date} at ${data.time}`;
+                    
+                    // Customer info
+                    document.getElementById('booking-customer-name').textContent = data.customer_name;
+                    document.getElementById('booking-customer-phone').textContent = data.customer_phone || 'Not provided';
+                    document.getElementById('booking-customer-email').textContent = data.customer_email || 'Not provided';
+                    document.getElementById('booking-customer-address').textContent = data.customer_address;
+                    
+                    // Service details
+                    document.getElementById('booking-duration').textContent = data.duration || '2 hours';
+                    document.getElementById('booking-price').textContent = data.price ? `$${data.price}` : 'Not specified';
+                    document.getElementById('booking-staff-count').textContent = data.assigned_staff || 'Unassigned';
+                    
+                    // Time tracking with Philippines time formatting
+                    document.getElementById('booking-clock-in').textContent = data.clock_in ? 
+                        formatPhilippinesTime(data.clock_in) : 'Not clocked in yet';
+                    document.getElementById('booking-clock-out').textContent = data.clock_out ? 
+                        formatPhilippinesTime(data.clock_out) : 'Not clocked out yet';
+                    document.getElementById('booking-work-duration').textContent = data.work_duration || 'Not completed';
+                    
+                    // Notes
+                    document.getElementById('booking-notes').textContent = data.notes || 'No additional notes.';
+                    
+                    // Status badges
+                    const statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                    
+                    const statusBadge = document.getElementById('booking-status-badge');
+                    statusBadge.textContent = statusText;
+                    statusBadge.className = 'status-badge status-' + data.status;
+                    
+                    // Action buttons
+                    const actionButtonsContainer = document.getElementById('booking-action-buttons');
+                    actionButtonsContainer.innerHTML = '';
+                    
+                    if (data.status === 'confirmed') {
+                        // Add clock-in/out buttons
+                        if (!data.clock_in) {
+                            const clockInBtn = document.createElement('a');
+                            clockInBtn.href = `/staff/clock-in/${data.id}/`;
+                            clockInBtn.className = 'btn btn-outline-primary me-2';
+                            clockInBtn.innerHTML = '<i class="bi bi-clock"></i> Clock In';
+                            actionButtonsContainer.appendChild(clockInBtn);
+                        }
+                        else if (!data.clock_out) {
+                            const clockOutBtn = document.createElement('a');
+                            clockOutBtn.href = `/staff/clock-out/${data.id}/`;
+                            clockOutBtn.className = 'btn btn-outline-warning me-2';
+                            clockOutBtn.innerHTML = '<i class="bi bi-clock-history"></i> Clock Out';
+                            actionButtonsContainer.appendChild(clockOutBtn);
+                        }
+                        
+                        // Add complete button
+                        const completeButton = document.createElement('form');
+                        completeButton.method = 'post';
+                        completeButton.action = "{% url 'update_booking_status' %}";
+                        completeButton.style.display = 'inline';
+                        completeButton.innerHTML = `
+                            {% csrf_token %}
+                            <input type="hidden" name="booking_id" value="${data.id}">
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit" class="btn btn-success">Mark as Complete</button>
+                        `;
+                        actionButtonsContainer.appendChild(completeButton);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching booking details:', error);
+                    alert('Error loading booking details. Please try again.');
+                });
+        }
+        
+        // Fix modal backdrop issue - ensure it's removed when modal is closed
+        const viewBookingModal = document.getElementById('viewBookingModal');
+        if (viewBookingModal) {
+            viewBookingModal.addEventListener('hidden.bs.modal', function () {
+                // Remove any leftover backdrop
+                const backdrops = document.getElementsByClassName('modal-backdrop');
+                for (let i = 0; i < backdrops.length; i++) {
+                    backdrops[i].parentNode.removeChild(backdrops[i]);
+                }
+                // Re-enable scrolling and remove modal open class
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        }
+        
+        function loadAllBookings(page, search = '') {
+            const tbody = document.querySelector('#all-bookings-table tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+            
+            // Get filter state from checkbox
+            const myServicesOnly = document.getElementById('my-services-only').checked;
+            
+            fetch(`/staff/bookings/?page=${page}&search=${search}&my_services_only=${myServicesOnly}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const bookings = data.results || data;
+                    const currentPage = data.current_page || 1;
+                    const totalPages = data.total_pages || 1;
+                    
+                    // Update pagination
+                    updatePagination(currentPage, totalPages);
+                    
+                    // Update showing entries text
+                    document.getElementById('showing-entries').textContent = 
+                        data.total ? `Showing ${data.start_index || 1} to ${data.end_index || bookings.length} of ${data.total} entries` : 
+                        `Showing ${bookings.length} entries`;
+                    
+                    // Generate table rows
+                    if (bookings.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No bookings found</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = '';
+                    bookings.forEach(booking => {
+                        // Highlight row if current user is qualified for this service
+                        const rowClass = booking.is_current_user_qualified ? 'qualified-service' : '';
+                        
+                        // Display qualified staff members
+                        let staffDisplay = '';
+                        
+                        if (booking.assigned_staff) {
+                            // If someone is already assigned, show them
+                            staffDisplay = booking.staff_name || `Staff #${booking.assigned_staff}`;
+                        } else if (booking.qualified_staff && booking.qualified_staff.length > 0) {
+                            // If no one is assigned but there are qualified staff, list them
+                            staffDisplay = `<span class="text-info">Qualified: ${booking.qualified_staff.join(', ')}</span>`;
+                        } else {
+                            // If no one is assigned or qualified
+                            staffDisplay = '<span class="text-danger">No qualified staff</span>';
+                        }
+                        
+                        const row = document.createElement('tr');
+                        row.className = rowClass;
+                        row.innerHTML = `
+                            <td>${booking.id}</td>
+                            <td>${booking.customer_name || "Unknown"}</td>
+                            <td>${booking.service_name || "Unknown"}</td>
+                            <td>${booking.date} at ${booking.time}</td>
+                            <td>${staffDisplay}</td>
+                            <td><span class="status-badge status-${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary view-booking"
+                                    data-id="${booking.id}" data-bs-toggle="modal" data-bs-target="#viewBookingModal">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Add click handlers to view buttons
+                    document.querySelectorAll('#all-bookings-table .view-booking').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            showBookingDetails(this.getAttribute('data-id'));
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading bookings:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading bookings. Please check if the API endpoint is available.</td></tr>';
+                });
+        }
+        
+        // Update pagination
+        function updatePagination(currentPage, totalPages) {
+            const pagination = document.getElementById('booking-pagination');
+            if (!pagination) return;
+            
+            let paginationHTML = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}" ${currentPage === 1 ? 'tabindex="-1"' : ''}>Previous</a>
+                </li>
+            `;
+            
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `;
+            }
+            
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'tabindex="-1"' : ''}>Next</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+            
+            // Add event listeners
+            document.querySelectorAll('#booking-pagination .page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (this.hasAttribute('tabindex')) return;
+                    
+                    const page = parseInt(this.getAttribute('data-page'));
+                    const searchQuery = document.getElementById('booking-search').value.trim();
+                    loadAllBookings(page, searchQuery);
+                });
+            });
+        }
+        
+        // Search functionality
+        const searchBtn = document.getElementById('search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', function() {
+                const searchQuery = document.getElementById('booking-search').value.trim();
+                loadAllBookings(1, searchQuery);
+            });
+        }
+        
+        const searchInput = document.getElementById('booking-search');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchQuery = this.value.trim();
+                    loadAllBookings(1, searchQuery);
+                }
+            });
+        }
+        
+        // Initialize my-services-only checkbox behavior
+        const myServicesOnlyCheckbox = document.getElementById('my-services-only');
+        if (myServicesOnlyCheckbox) {
+            myServicesOnlyCheckbox.addEventListener('change', function() {
+                loadAllBookings(1, document.getElementById('booking-search').value.trim());
+            });
+        }
+        
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
+        
+        // Format all clock-in timestamps on page load
+        document.querySelectorAll('.clock-status.clock-in').forEach(element => {
+            if (element.textContent.includes('In:')) {
+                const parts = element.textContent.split('In:');
+                const timestamp = parts[1].trim();
+                if (timestamp && !timestamp.toLowerCase().includes('not')) {
+                    element.textContent = 'In: ' + formatPhilippinesTime(timestamp);
+                }
+            }
+        });
+    });
+    // Handle Before Photo Upload
+document.getElementById('upload-before-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const bookingId = document.querySelector('#viewBookingModal .view-booking').getAttribute('data-id');
+    fetch(`/staff/upload_photo/before/${bookingId}/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('before-photo').src = data.photo_url;
+            document.getElementById('before-photo').style.display = 'block';
+            document.getElementById('no-before-photo').style.display = 'none';
+        } else {
+            alert('Error uploading before photo.');
+        }
+    });
+});
+
+// Handle After Photo Upload
+document.getElementById('upload-after-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const bookingId = document.querySelector('#viewBookingModal .view-booking').getAttribute('data-id');
+    fetch(`/staff/upload_photo/after/${bookingId}/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('after-photo').src = data.photo_url;
+            document.getElementById('after-photo').style.display = 'block';
+            document.getElementById('no-after-photo').style.display = 'none';
+        } else {
+            alert('Error uploading after photo.');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,688 @@
+{% comment %} {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+        width: 250px;
+        background-color: #343a40;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+     
+    .sidebar-header {
+        padding: 20px;
+        background-color: #A0D889;
+        text-align: center;
+    }
+    
+    .sidebar-logo {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .sidebar-nav {
+        margin-top: 30px;
+    }
+    
+    .sidebar-nav .nav-item {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: #ced4da;
+        padding: 12px 20px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-nav .nav-link.active,
+    .sidebar-nav .nav-link:hover {
+        background-color: #A0D889;
+        color: white;
+        border-radius: 0;
+    }
+    
+    /* Main content area */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+    
+    /* Dashboard cards */
+    .dashboard-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+    
+    .dashboard-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+    }
+    
+    /* Stats cards */
+    .stats-card {
+        border-radius: 10px;
+        background-color: white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .stats-card .number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #8DC448;
+    }
+    
+    .stats-card .label {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    /* Buttons */
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    /* Status badges */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-confirmed {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-completed {
+        background-color: #e2eafc;
+        color: #0a58ca;
+    }
+    
+    .status-cancelled {
+        background-color: #e2e3e5;
+        color: #41464b;
+    }
+    
+    /* Table styles */
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+    
+    /* Service form */
+    .service-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    /* Animation */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+<!-- Override the navbar -->
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="mb-0">Mopia Admin</h4>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_bookings' %}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_services' %}">
+                        <i class="bi bi-tools"></i> Services
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_customers' %}">
+                        <i class="bi bi-people"></i> Customers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_settings' %}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li class="nav-item mt-5">
+                    <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Dashboard Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0" id="section-title">Dashboard Overview</h1>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> View Site
+            </a>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'warning' in message.tags %}
+                    <div class="alert alert-warning alert-dismissible fade show mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Notice:</strong> {{ message }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Dashboard Content Sections -->
+        <div id="dashboard-overview" class="dashboard-section">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ total_bookings }}</div>
+                        <div class="label">Total Bookings</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ pending_bookings }}</div>
+                        <div class="label">Pending Bookings</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="number">{{ completed_bookings }}</div>
+                        <div class="label">Completed Bookings</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Bookings -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                    <a href="#" class="btn btn-sm btn-outline-secondary" id="view-all-bookings">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings|slice:":5" %}
+                                <tr>
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.customer.name }}</td>
+                                    <td>{{ booking.service.name }}</td>
+                                    <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">No bookings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bookings Section -->
+        <div id="bookings-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All Bookings</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Customer</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Service</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.id }}</td>
+                                    <td>{{ booking.customer.name }}</td>
+                                    <td>{{ booking.customer.email }}</td>
+                                    <td>{{ booking.customer.phone }}</td>
+                                    <td>{{ booking.service.name }}</td>
+                                    <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                                    <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                        <form method="post" action="{% url 'update_booking_status' %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                            <input type="hidden" name="status" value="confirmed">
+                                            <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                        </form>
+                                        <form method="post" action="{% url 'update_booking_status' %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                            <input type="hidden" name="status" value="cancelled">
+                                            <button type="submit" class="btn btn-sm btn-danger">Decline</button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted">No actions</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">No bookings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Services Section -->
+        <div id="services-section" class="dashboard-section d-none">
+            <div class="row">
+                <!-- Service Form -->
+                <div class="col-md-4">
+                    <div class="service-form mb-4">
+                        <h5 class="mb-3">Add/Edit Service</h5>
+                        <form id="service-form" method="post" action="{% url 'admin_service_save' %}">
+                            {% csrf_token %}
+                            <input type="hidden" id="service-id" name="service_id">
+                            
+                            <div class="mb-3">
+                                <label for="service-name" class="form-label">Service Name</label>
+                                <input type="text" class="form-control" id="service-name" name="name" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="service-price" class="form-label">Price (₱)</label>
+                                <input type="number" class="form-control" id="service-price" name="price" step="0.01" min="0" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="service-description" class="form-label">Description</label>
+                                <textarea class="form-control" id="service-description" name="description" rows="5" required></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="admin-password" class="form-label">Confirm with Admin Password</label>
+                                <input type="password" class="form-control" id="admin-password" name="admin_password" required>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <button type="button" id="reset-service-form" class="btn btn-secondary">Clear</button>
+                                <button type="submit" class="btn btn-mopia">Save Service</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Services List -->
+                <div class="col-md-8">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">All Services</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Price</th>
+                                            <th>Description</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for service in services %}
+                                        <tr>
+                                            <td>{{ service.id }}</td>
+                                            <td>{{ service.name }}</td>
+                                            <td>₱{{ service.price }}</td>
+                                            <td>{{ service.description|truncatechars:50 }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary edit-service" 
+                                                    data-id="{{ service.id }}"
+                                                    data-name="{{ service.name }}"
+                                                    data-price="{{ service.price }}"
+                                                    data-description="{{ service.description }}">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-service" data-id="{{ service.id }}">Delete</button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">No services found.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customers Section -->
+        <div id="customers-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All Customers</h5>
+                    <div>
+                        <button class="btn btn-outline-secondary btn-sm">Export</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customers %}
+                                <tr>
+                                    <td>{{ customer.id }}</td>
+                                    <td>{{ customer.name }}</td>
+                                    <td>{{ customer.email }}</td>
+                                    <td>{{ customer.phone }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">No customers found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Section -->
+        <div id="settings-section" class="dashboard-section d-none">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="mb-0">Settings</h5>
+                </div>
+                <div class="card-body">
+                    <h6>System Settings</h6>
+                    <p>Coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout from the admin dashboard?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Service Confirmation Modal -->
+<div class="modal fade" id="deleteServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Delete Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this service? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="delete-service-form" method="post" action="{% url 'admin_service_delete' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="delete-service-id" name="service_id">
+                    <div class="mb-3">
+                        <label for="delete-admin-password" class="form-label">Confirm with Admin Password</label>
+                        <input type="password" class="form-control" id="delete-admin-password" name="admin_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Delete Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Navigation between sections
+        const sections = {
+            'overview-link': 'dashboard-overview',
+            'bookings-link': 'bookings-section',
+            'services-link': 'services-section',
+            'customers-link': 'customers-section',
+            'settings-link': 'settings-section'
+        };
+        
+        const sectionTitles = {
+            'overview-link': 'Dashboard Overview',
+            'bookings-link': 'Manage Bookings',
+            'services-link': 'Manage Services',
+            'customers-link': 'Manage Customers',
+            'settings-link': 'Settings'
+        };
+        
+        // Click handlers for navigation
+        Object.keys(sections).forEach(linkId => {
+            const link = document.getElementById(linkId);
+            if (link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active nav
+                    document.querySelectorAll('.sidebar-nav .nav-link').forEach(navLink => {
+                        navLink.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Show selected section, hide others
+                    document.querySelectorAll('.dashboard-section').forEach(section => {
+                        section.classList.add('d-none');
+                    });
+                    document.getElementById(sections[linkId]).classList.remove('d-none');
+                    
+                    // Update section title
+                    document.getElementById('section-title').textContent = sectionTitles[linkId];
+                });
+            }
+        });
+        
+        // View all bookings link
+        const viewAllBookingsBtn = document.getElementById('view-all-bookings');
+        if (viewAllBookingsBtn) {
+            viewAllBookingsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('bookings-link').click();
+            });
+        }
+        
+        // Service form functionality
+        const serviceForm = document.getElementById('service-form');
+        const resetServiceFormBtn = document.getElementById('reset-service-form');
+        
+        // Reset form
+        if (resetServiceFormBtn) {
+            resetServiceFormBtn.addEventListener('click', function() {
+                serviceForm.reset();
+                document.getElementById('service-id').value = '';
+                document.querySelector('button[type="submit"]').textContent = 'Save Service';
+            });
+        }
+        
+        // Edit service buttons
+        document.querySelectorAll('.edit-service').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const price = this.getAttribute('data-price');
+                const description = this.getAttribute('data-description');
+                
+                document.getElementById('service-id').value = id;
+                document.getElementById('service-name').value = name;
+                document.getElementById('service-price').value = price;
+                document.getElementById('service-description').value = description;
+                
+                document.querySelector('button[type="submit"]').textContent = 'Update Service';
+                
+                // Switch to services tab if not already there
+                document.getElementById('services-link').click();
+                
+                // Scroll to form
+                document.querySelector('.service-form').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Delete service buttons
+        document.querySelectorAll('.delete-service').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('delete-service-id').value = id;
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));
+                deleteModal.show();
+            });
+        });
+    });
+</script>
+{% endblock %} {% endcomment %}

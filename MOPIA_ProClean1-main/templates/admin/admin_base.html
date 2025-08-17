@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+        width: 250px;
+        background-color: #343a40;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-header {
+        padding: 20px;
+        background-color: #8DC448;
+        text-align: center;
+    }
+    
+    .sidebar-nav {
+        margin-top: 30px;
+    }
+    
+    .sidebar-nav .nav-item {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: #ced4da;
+        padding: 12px 20px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-nav .nav-link.active,
+    .sidebar-nav .nav-link:hover {
+        background-color: #8DC448;
+        color: white;
+        border-radius: 0;
+    }
+    
+    /* Main content area */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+    
+    /* Admin cards */
+    .admin-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+    
+    .admin-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+    }
+    
+    /* Admin buttons */
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: white;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #7ab33a;
+        border-color: #7ab33a;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    /* Status badges */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-confirmed {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-completed {
+        background-color: #e2eafc;
+        color: #0a58ca;
+    }
+    
+    .status-cancelled {
+        background-color: #e2e3e5;
+        color: #41464b;
+    }
+    
+    /* Table styles */
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+</style>
+
+{% endblock %}
+
+{% block admin_extra_css %}{% endblock %}
+
+<!-- Override the navbar -->
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Include Admin Panel -->
+    {% include 'admin/admin_panel.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">{% block admin_title %}Admin Panel{% endblock %}</h1>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> View Site
+            </a>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'warning' in message.tags %}
+                    <div class="alert alert-warning alert-dismissible fade show mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Notice:</strong> {{ message }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Admin Content -->
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout from the admin dashboard?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional modals -->
+{% block admin_modals %}{% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+{% block admin_extra_js %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Our Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .service-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 25px;
+        background-color: white;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .service-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .service-price {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #8DC448;
+        margin-bottom: 15px;
+    }
+    
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: white;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #7ab33a;
+        border-color: #7ab33a;
+        color: white;
+    }
+    
+    .service-description {
+        margin-bottom: 20px;
+        color: #666;
+    }
+    
+    .services-header {
+        margin-bottom: 3rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    
+    .services-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background-color: #8DC448;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="services-header fw-bold">Our Cleaning Services</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% if db_ready == False %}
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <p>Services cannot be displayed because the database is not properly set up.</p>
+                    <p>Please run the following command to fix this issue:</p>
+                    <pre class="bg-light p-2">python fix_migrations.py</pre>
+                    <p>After running the command, refresh this page.</p>
+                </div>
+            </div>
+        {% else %}
+            {% for service in services %}
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card p-4 h-100">
+                    <h3 class="service-title">{{ service.name }}</h3>
+                    <div class="service-price">₱{{ service.price }}</div>
+                    <p class="service-description">{{ service.description }}</p>
+                    <p class="service-duration">{{ service.duration }}</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'booking' %}" class="btn btn-mopia">Book Now</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No services available at the moment.
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

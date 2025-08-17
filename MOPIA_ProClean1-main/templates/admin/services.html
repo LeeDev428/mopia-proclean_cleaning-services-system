@@ -1,0 +1,431 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Manage Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Sidebar styles - match your existing admin dashboard */
+    .sidebar {
+        width: 250px;
+        background-color: #343a40;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-header {
+        padding: 20px;
+        background-color: #8DC448;
+        text-align: center;
+    }
+    
+    .sidebar-nav {
+        margin-top: 30px;
+    }
+    
+    .sidebar-nav .nav-item {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: #ced4da;
+        padding: 12px 20px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-nav .nav-link.active,
+    .sidebar-nav .nav-link:hover {
+        background-color: #8DC448;
+        color: white;
+        border-radius: 0;
+    }
+    
+    /* Main content area */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+    
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+    }
+    
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: #333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+    
+    /* Assignment table */
+    .table-assignments th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .assignment-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* RESPONSIVE ADDITIONS */
+    @media (max-width: 991.98px) {
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: unset;
+        }
+        .main-content {
+            margin-left: 0;
+            padding: 15px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .card,
+        .assignment-card {
+            padding: 10px 0;
+        }
+        .card-header {
+            padding: 10px 15px;
+        }
+        .sidebar-header {
+            padding: 12px;
+        }
+        .sidebar-nav .nav-link {
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+        .main-content h1 {
+            font-size: 1.4rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .sidebar-header h4 {
+            font-size: 1.1rem;
+        }
+        .btn,
+        .btn-mopia,
+        .btn-outline-secondary {
+            font-size: 0.95rem;
+            padding: 8px 12px;
+        }
+        .card-header h5 {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block admin_content %}
+<div class="row">
+    <!-- Service Form -->
+    <div class="col-md-4">
+    <div class="service-form mb-4">
+        <h5 class="mb-3">Add/Edit Service</h5>
+        <form id="service-form" method="post" action="{% url 'admin_service_save' %}">
+            {% csrf_token %}
+            <input type="hidden" id="service-id" name="service_id">
+            
+            <div class="mb-3">
+                <label for="service-name" class="form-label">Service Name</label>
+                <input type="text" class="form-control" id="service-name" name="name" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="service-price" class="form-label">Price (₱)</label>
+                <input type="number" class="form-control" id="service-price" name="price" step="0.01" min="0" required>
+            </div>
+            
+            <!-- New fields -->
+            <div class="mb-3">
+                <label for="service-duration" class="form-label">Duration (estimated)</label>
+                <input type="text" class="form-control" id="service-duration" name="duration" placeholder="e.g. 2 hours, 4-6 hours">
+            </div>
+            
+            <div class="mb-3">
+                <label for="service-materials" class="form-label">Materials & Equipment</label>
+                <textarea class="form-control" id="service-materials" name="materials" rows="3" placeholder="List of materials and equipment"></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="service-staff" class="form-label">Staff Count</label>
+                <input type="number" class="form-control" id="service-staff" name="staff_count" min="1" value="1">
+            </div>
+            
+            <div class="mb-3">
+                <label for="service-description" class="form-label">Description</label>
+                <textarea class="form-control" id="service-description" name="description" rows="5" required></textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <button type="button" id="reset-service-form" class="btn btn-secondary">Clear</button>
+                <button type="submit" id="save-service-btn" class="btn btn-primary">Save Service</button>
+            </div>
+        </form>
+    </div>
+</div>
+    
+    <!-- Services List -->
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Services</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active filter-btn" data-filter="all">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary filter-btn" data-filter="active">Active</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary filter-btn" data-filter="archived">Archived</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Duration</th>
+                                <th>Staff</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in services %}
+                            <tr class="service-row {% if service.is_archived %}archived-service{% endif %}">
+                                <td>{{ service.id }}</td>
+                                <td>{{ service.name }}</td>
+                                <td>₱{{ service.price }}</td>
+                                <td>{{ service.duration|default:"-" }}</td>
+                                <td>{{ service.staff_count }}</td>
+                                <td>
+                                    {% if service.is_archived %}
+                                    <span class="badge bg-secondary">Archived</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-outline-primary edit-service" 
+                                            data-id="{{ service.id }}"
+                                            data-name="{{ service.name }}"
+                                            data-price="{{ service.price }}"
+                                            data-duration="{{ service.duration }}"
+                                            data-materials="{{ service.materials }}"
+                                            data-staff="{{ service.staff_count }}"
+                                            data-description="{{ service.description }}">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        {% if service.is_archived %}
+                                        <button class="btn btn-outline-success restore-service" data-id="{{ service.id }}" title="Restore Service">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-outline-warning archive-service" data-id="{{ service.id }}" title="Archive Service">
+                                            <i class="bi bi-archive"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No services found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_modals %}
+<!-- Archive Service Confirmation Modal -->
+<div class="modal fade" id="archiveServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Archive Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to archive this service? Archived services will not appear in customer booking options.</p>
+                <p><strong>Note:</strong> You can restore this service later if needed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="archive-service-form" method="post" action="{% url 'admin_service_archive' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="archive-service-id" name="service_id">
+                    <input type="hidden" name="action" value="archive">
+                    <button type="submit" class="btn btn-warning">Archive Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Service Confirmation Modal -->
+<div class="modal fade" id="restoreServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Restore Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to restore this service? Restored services will appear in customer booking options.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="restore-service-form" method="post" action="{% url 'admin_service_archive' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="restore-service-id" name="service_id">
+                    <input type="hidden" name="action" value="restore">
+                    <button type="submit" class="btn btn-success">Restore Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Service form functionality
+        const serviceForm = document.getElementById('service-form');
+        const resetServiceFormBtn = document.getElementById('reset-service-form');
+        
+        // Reset form
+        if (resetServiceFormBtn) {
+            resetServiceFormBtn.addEventListener('click', function() {
+                serviceForm.reset();
+                document.getElementById('service-id').value = '';
+                document.getElementById('save-service-btn').textContent = 'Save Service';
+            });
+        }
+        
+        // Edit service buttons
+        document.querySelectorAll('.edit-service').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const price = this.getAttribute('data-price');
+                const duration = this.getAttribute('data-duration');
+                const materials = this.getAttribute('data-materials');
+                const staff = this.getAttribute('data-staff');
+                const description = this.getAttribute('data-description');
+                
+                document.getElementById('service-id').value = id;
+                document.getElementById('service-name').value = name;
+                document.getElementById('service-price').value = price;
+                document.getElementById('service-duration').value = duration || '';
+                document.getElementById('service-materials').value = materials || '';
+                document.getElementById('service-staff').value = staff || '1';
+                document.getElementById('service-description').value = description;
+                
+                document.getElementById('save-service-btn').textContent = 'Update Service';
+                
+                // Scroll to form
+                document.querySelector('.service-form').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Archive service buttons
+        document.querySelectorAll('.archive-service').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('archive-service-id').value = id;
+                const archiveModal = new bootstrap.Modal(document.getElementById('archiveServiceModal'));
+                archiveModal.show();
+            });
+        });
+        
+        // Restore service buttons
+        document.querySelectorAll('.restore-service').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('restore-service-id').value = id;
+                const restoreModal = new bootstrap.Modal(document.getElementById('restoreServiceModal'));
+                restoreModal.show();
+            });
+        });
+        
+        // Service status filter
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.getAttribute('data-filter');
+                const rows = document.querySelectorAll('.service-row');
+                
+                rows.forEach(row => {
+                    if (filter === 'all') {
+                        row.style.display = '';
+                    } else if (filter === 'active') {
+                        row.style.display = row.classList.contains('archived-service') ? 'none' : '';
+                    } else if (filter === 'archived') {
+                        row.style.display = row.classList.contains('archived-service') ? '' : 'none';
+                    }
+                });
+            });
+        });
+        
+        // Set initial filter to 'active'
+        document.querySelector('.filter-btn[data-filter="active"]').click();
+    });
+</script>
+{% endblock %}

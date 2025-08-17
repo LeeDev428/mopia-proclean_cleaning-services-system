@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mopia Cleaning - Professional Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --mopia-green: #A0D889;
+        --mopia-dark: #333333;
+        --mopia-light-bg: #f9f9f9;
+        --mopia-blue: #A0D889;
+    }
+    
+    body {
+        font-family: 'Roboto', sans-serif;
+        color: var(--mopia-dark);
+    }
+    
+    .navbar {
+        background-color: var(--mopia-blue) !important;
+    }
+    
+    .navbar-brand, .nav-link {
+        color: white !important;
+    }
+    
+    .bg-mopia {
+        background-color: var(--mopia-green);
+    }
+    
+    .text-mopia {
+        color: var(--mopia-green);
+    }
+    
+    .btn-mopia {
+        background-color: var(--mopia-green);
+        border-color: var(--mopia-green);
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    .hero-section {
+        padding: 5rem 0;
+        background-color: white;
+    }
+    
+    .why-choose-section {
+        background-color: var(--mopia-green);
+        padding: 5rem 0;
+        color: #333;
+    }
+    
+    .feature-icon {
+        background-color: white;
+        width: 120px;
+        height: 120px;
+        border-radius: 15px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transform: rotate(45deg);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .feature-icon svg, .feature-icon img {
+        transform: rotate(-45deg);
+    }
+    
+    .service-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease, transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    
+    .footer {
+        background-color: var(--mopia-green);
+        padding: 3rem 0;
+        color: #333;
+    }
+    
+    .footer h5 {
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+    
+    .footer a {
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .footer a:hover {
+        color: white;
+    }
+    
+    .social-icons a {
+        margin-right: 15px;
+        font-size: 1.2rem;
+    }
+    
+    /* Animation Classes */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .fade-in.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .slide-in-left {
+        opacity: 0;
+        transform: translateX(-50px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .slide-in-right {
+        opacity: 0;
+        transform: translateX(50px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .slide-in-left.active,
+    .slide-in-right.active {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    
+    .scale-in {
+        opacity: 0;
+        transform: scale(0.8);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .scale-in.active {
+        opacity: 1;
+        transform: scale(1);
+    }
+    
+    .rotate-in {
+        opacity: 0;
+        transform: rotate(-10deg) scale(0.8);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .rotate-in.active {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+    
+    /* Loading animation */
+    .loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(141, 196, 72, 0.1);
+        border-left-color: var(--mopia-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Pulse animation on logo */
+    .logo-pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Loader -->
+<div class="loader">
+    <div class="spinner"></div>
+</div>
+
+<!-- Hero Section -->
+<div class="hero-section fade-in">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="fw-bold mb-4">The MOPIA<br>Professional Cleaning Services</h1>
+                <p class="lead mb-4">For a Safer, Cleaner Space and Healthier Indoor Environment.</p>
+                <p class="mb-4">At MOPIA Professional Cleaning Services, we pride ourselves on attention to detail and customer satisfaction.</p>
+                <a href="{% url 'booking' %}" class="btn btn-mopia btn-lg">Book Now</a>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-mopia p-5 rounded text-center" style="height: 60%;">
+                    <img src="{% static 'images/mopialogo.png' %}" alt="Mopia Cleaning" class="img-fluid" style="max-height: 200px; width: auto;" />
+                </div>                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Why Choose MOPIA Section -->
+<section class="why-choose-section fade-in">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-5">
+                <h2 class="fw-bold display-5 mb-4">Why Choose<br>MOPIA ?</h2>
+            </div>
+            <div class="col-lg-7">
+                <p>We understand your home is important to you. That's why we focus on the quality of the clean. Our cleaners aren't contract workers - they are full-time employees. They care as much as we do.</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4 text-center">
+                <div class="feature-icon rotate-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-calendar-check text-mopia" viewBox="0 0 16 16">
+                        <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                    </svg>
+                </div>
+                <h4 class="fw-bold">BOOK</h4>
+                <p>Tell us when and where you want your cleaning.</p>
+            </div>
+            <div class="col-md-4 mb-4 text-center">
+                <div class="feature-icon rotate-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-brush text-mopia" viewBox="0 0 16 16">
+                        <path d="M15.825.12a.5.5 0 0 1 .132.584c-1.53 3.43-4.743 8.17-7.095 10.64a6.067 6.067 0 0 1-2.373 1.534c-.018.227-.06.538-.16.868-.201.659-.667 1.479-1.708 1.74a8.118 8.118 0 0 1-3.078.132 3.659 3.659 0 0 1-.562-.135 1.382 1.382 0 0 1-.466-.247.714.714 0 0 1-.204-.288.622.622 0 0 1 .004-.443c.095-.245.316-.38.461-.452.394-.197.625-.453.867-.826.095-.144.184-.297.287-.472l.117-.198c.151-.255.326-.54.546-.848.528-.739 1.201-.925 1.746-.896.126.007.243.025.348.048.062-.172.142-.38.238-.608.261-.619.658-1.419 1.187-2.069 2.176-2.67 6.18-6.206 9.117-8.104a.5.5 0 0 1 .596.04z"/>
+                    </svg>
+                </div>
+                <h4 class="fw-bold">CLEAN</h4>
+                <p>A Professional cleaner comes over and cleans your place.</p>
+            </div>
+            <div class="col-md-4 mb-4 text-center">
+                <div class="feature-icon rotate-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-stars text-mopia" viewBox="0 0 16 16">
+                        <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937z"/>
+                    </svg>
+                </div>
+                <h4 class="fw-bold">FREEDOM</h4>
+                <p>Enjoy your life and come back to a clean space.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section with Modern Layout -->
+<section class="services-section py-5 bg-light fade-in">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Our Services</h2>
+                <p class="text-muted">We provide professional cleaning services tailored to your needs</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Residential Cleaning Card -->
+            <div class="col-md-4 mb-4">
+                <div class="service-card bg-white h-100 slide-in-left">
+                    <div class="p-4">
+                        <div class="mb-3">
+                            <img src="{% static 'images/disinfection.jpg' %}" alt="Deep Cleaning and Disinfection" class="img-fluid rounded" style="width: 100%; height: 200px; object-fit: cover;">
+                        </div>
+                        <h5 class="card-title fw-bold text-mopia mb-2">Deep Cleaning and Disinfection</h5>
+                        <p class="card-text text-muted mb-2">Our Deep Cleaning and Disinfection service delivers a comprehensive, top-to-bottom clean that targets hidden grime and high-touch areas. 
+                            We eliminate built-up dirt and bacteria, using hospital-grade disinfectants to ensure a hygienic, safe, and refreshed environment 
+                            for your home or business.
+</p>
+                        <!-- <p class="fw-bold text-success mb-2">₱1,500.00</p>
+                        <a href="{% url 'booking' %}" class="btn btn-mopia mt-3">Book Now</a> -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Commercial Cleaning Card -->
+            <div class="col-md-4 mb-4">
+                <div class="service-card bg-white h-100 slide-in-left">
+                    <div class="p-4">
+                        <div class="mb-3">
+                           <img src="{% static 'images/deep_cleaning.jpg' %}" alt="Deep Cleaning" class="img-fluid rounded" style="width: 100%; height: 200px; object-fit: cover;">
+                        </div>
+                        <h5 class="card-title fw-bold text-mopia mb-2">Deep Cleaning</h5>
+                        <p class="card-text text-muted mb-2">Our Deep Cleaning service provides a meticulous, in-depth clean that goes beyond the surface. We focus on hard-to-reach areas, built-up grime, and neglected spaces, restoring your home or workspace to a pristine condition with attention to every detail.</p>
+                        <!-- <p class="fw-bold text-success mb-2">₱2,500.00</p>
+                        <a href="{% url 'booking' %}" class="btn btn-mopia mt-3">Book Now</a> -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Post-Construction Cleaning Card -->
+            <div class="col-md-4 mb-4">
+                <div class="service-card bg-white h-100 slide-in-left">
+                    <div class="p-4">
+                        <div class="mb-3">
+                            <img src="{% static 'images/upholstery.jpg' %}" alt="Upholstery" class="img-fluid rounded" style="width: 100%; height: 200px; object-fit: cover;">
+                        </div>
+                        <h5 class="card-title fw-bold text-mopia mb-2">Upholstery Cleaning</h5>
+                        <p class="card-text text-muted mb-2">Our Upholstery Cleaning service gently but effectively removes dirt, stains, allergens, and odors from your furniture. Using specialized equipment and safe cleaning solutions, we restore the look and feel of your sofas, chairs, and other upholstered items—leaving them fresh, clean, and revitalized.</p>
+                        <!-- <p class="fw-bold text-success mb-2">₱3,000.00</p>
+                        <a href="{% url 'booking' %}" class="btn btn-mopia mt-3">Book Now</a> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section py-5 bg-white fade-in">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 text-center">
+                <h2 class="fw-bold mb-4">Ready for a Cleaner Space?</h2>
+                <p class="mb-4 lead">Book our professional cleaning services today and enjoy the difference.</p>
+                <a href="{% url 'booking' %}" class="btn btn-mopia btn-lg">Book Now</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer fade-in">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-4 mb-4">
+                <h5>COMPANY</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-4">
+                <h5>SERVICES</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">Deep Cleaning and Disinfection</a></li>
+                    <li><a href="#">Deep Cleaning</a></li>
+                    <li><a href="#">Upholstery Cleaning</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-4">
+                <h5>SUPPORT</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">FAQ's</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="row align-items-center">
+            <div class="col-lg-6 col-md-8 mb-3 mb-md-0">
+                <div class="d-flex align-items-center">
+                    <img src="{% static 'images/mopialogo.png' %}" alt="Mopia Cleaning" class="img-fluid me-4" style="height: 60px; width: auto;" />
+                    <div class="social-icons d-flex align-items-center">
+                        <a href="https://www.facebook.com/MopiaCleanersPH"  target="_blank" class="bg-white p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-facebook text-mopia"></i>
+                        </a>
+                        <a href="https://www.instagram.com/mopiacleanersph/"  target="_blank" class="bg-white p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-instagram text-mopia"></i>
+                        </a>
+                        <a href="https://g.co/kgs/8Mttw6R" target="_blank" class="bg-white p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-google text-mopia"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-4 text-md-end">
+                <p class="mb-1 fw-bold">© Mopia Cleaning Services 2020</p>
+                <div class="d-flex justify-content-md-end">
+                    <a href="#" class="me-3 text-decoration-none">Privacy Policy</a>
+                    <a href="#" class="text-decoration-none">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Page loading animation
+    window.addEventListener('load', function() {
+        const loader = document.querySelector('.loader');
+        setTimeout(function() {
+            loader.classList.add('hidden');
+        }, 500);
+    });
+    
+    // Animation on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial check for elements in viewport
+        checkElementsInViewport();
+        
+        // Add animation class to hero section immediately
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            setTimeout(function() {
+                heroSection.classList.add('active');
+            }, 300);
+        }
+        
+        // Add logo pulse animation
+        const logo = document.querySelector('.hero-section img');
+        if (logo) {
+            logo.classList.add('logo-pulse');
+        }
+        
+        // Check elements on scroll
+        window.addEventListener('scroll', checkElementsInViewport);
+        
+        function checkElementsInViewport() {
+            const animatedElements = document.querySelectorAll('.fade-in, .slide-in-left, .slide-in-right, .scale-in, .rotate-in');
+            
+            animatedElements.forEach(function(element) {
+                if (isElementInViewport(element) && !element.classList.contains('active')) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        function isElementInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.8
+            );
+        }
+        
+        // Add animation classes to different sections
+        const whyChooseItems = document.querySelectorAll('.feature-icon');
+        whyChooseItems.forEach(function(item, index) {
+            item.classList.add('rotate-in');
+            // Staggered animation delay
+            item.style.transitionDelay = (0.2 * index) + 's';
+        });
+        
+        const serviceCards = document.querySelectorAll('.service-card');
+        serviceCards.forEach(function(card, index) {
+            card.classList.add('slide-in-left');
+            // Staggered animation delay
+            card.style.transitionDelay = (0.1 * index) + 's';
+        });
+    });
+</script>
+{% endblock %}

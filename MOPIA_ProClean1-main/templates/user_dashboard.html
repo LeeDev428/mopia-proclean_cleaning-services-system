@@ -1,0 +1,1300 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+<style>
+    /* Keeping your existing styles */
+    /* Navbar styles */
+    .user-navbar {
+        background-color: #A0D889;
+        padding: 10px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    
+    .dropdown-toggle::after {
+        display: none;
+    }
+    
+    .dropdown-menu {
+        border-radius: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .dropdown-item {
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .dropdown-item i {
+        margin-right: 0.5rem;
+        color: #A0D889;
+    }
+    
+/* Calendar styles - ORIGINAL CSS
+    .calendar-container {
+        height: 95vh;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .calendar-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .calendar-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+        */
+    
+    /* Booking form styles - ORIGINAL CSS 
+    .booking-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .booking-form:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .card-header {
+        background-color: #8DC448;
+        color: white;
+        font-weight: 500;
+    }
+        */
+    
+    /* FullCalendar styling - ORIGINAL CSS 
+    .fc-button-primary {
+        background-color: #8DC448 !important;
+        border-color: #8DC448 !important;
+    }
+    
+    .fc-button-primary:hover {
+        background-color: #7ab33a !important;
+        border-color: #7ab33a !important;
+    }
+    
+    .fc-daygrid-day.fc-day-today {
+        background-color: rgba(141, 196, 72, 0.1) !important;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+        */
+
+    /* MODIFIED CSS */
+        /* Calendar styles */
+    .calendar-container {
+        height: 95vh;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .calendar-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .calendar-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    /* Booking form styles */
+    .booking-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .booking-form:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .card-header {
+        background-color: #8DC448;
+        color: white;
+        font-weight: 500;
+    }
+    
+    /* FullCalendar styling */
+    .fc-button-primary {
+        background-color: #8DC448 !important;
+        border-color: #8DC448 !important;
+    }
+    
+    .fc-button-primary:hover {
+        background-color: #7ab33a !important;
+        border-color: #7ab33a !important;
+    }
+    
+    .fc-daygrid-day.fc-day-today {
+        background-color: rgba(141, 196, 72, 0.1) !important;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .bg-mopia {
+        background-color: #8DC448 !important;
+    }
+    
+    /* Toast styling */
+    .toast {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        border-radius: 10px;
+        opacity: 1;
+    }
+
+    /* Notification dropdown styling */
+    .notification-dropdown {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .notification-dropdown .dropdown-header {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 10px 15px;
+    }
+    
+    .notification-dropdown .dropdown-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .notification-dropdown .dropdown-item:last-child {
+        border-bottom: none;
+    }
+    
+    .notification-dropdown .dropdown-item:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+
+    /* Notification scrollbar styles */
+    .notification-dropdown {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .notification-message {
+        max-height: 100px;
+        overflow-y: auto;
+        text-overflow: ellipsis;
+    }
+    
+    /* Custom scrollbar for notifications */
+    .notification-message::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .notification-message::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .notification-message::-webkit-scrollbar-thumb {
+        background: #8DC448;
+        border-radius: 5px;
+    }
+    
+    .notification-message::-webkit-scrollbar-thumb:hover {
+        background: #7ab33a;
+    }
+    
+    /* Make the dropdown menu for notifications wider */
+    .notification-dropdown-menu {
+        width: 350px !important;
+        max-width: 100vw;
+    }
+    
+    /* Notification read/unread styling */
+    .notification-item {
+        transition: all 0.3s ease;
+    }
+    
+    .notification-item.read {
+        opacity: 0.6;
+    }
+    
+    .notification-item.read:hover {
+        opacity: 0.9;
+    }
+    
+    .notification-item .notification-message {
+        transition: color 0.3s ease;
+    }
+    
+    .notification-item.read .notification-message {
+        color: #6c757d;
+    }
+    
+    /* Booking history table styles */
+    .booking-history {
+        margin-top: 2rem;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-pending {
+        background-color: #ffeeba;
+        color: #856404;
+    }
+    
+    .status-confirmed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-completed {
+        background-color: #c3e6cb;
+        color: #0f401a;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .tab-container {
+        margin-top: 2rem;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .nav-tabs {
+        border-bottom: none;
+        background-color: #f8f9fa;
+        padding: 0.5rem 0.5rem 0;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: #495057;
+        border-radius: 5px 5px 0 0;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #8DC448;
+        background-color: white;
+        border-bottom: 3px solid #8DC448;
+    }
+    
+    .tab-content {
+        padding: 1.5rem;
+    }
+    
+    /* Booking Summary Styles */
+    .booking-summary-table {
+        width: 100%;
+    }
+    
+    .booking-summary-table td {
+        padding: 8px 0;
+    }
+    
+    .booking-summary-table td:first-child {
+        font-weight: 500;
+        width: 40%;
+    }
+    
+    .booking-summary-divider {
+        border-top: 1px solid #dee2e6;
+        margin: 15px 0;
+    }
+    
+    .booking-summary-total {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #22540D;
+    }
+    
+    /* Add notification animation */
+    @keyframes notificationPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .notification-new {
+        animation: notificationPulse 1s ease-in-out;
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+</style>
+{% endblock %}
+
+<!-- Override the navbar in base.html -->
+{% block navbar %}
+<nav class="user-navbar">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-white" href="{% url 'home' %}">
+                <img src="{% static 'images/mopialogo.png' %}" alt="Mopia Cleaning" class="img-fluid me-4" style="height: 60px; width: auto;" />
+            </a>
+            <div class="d-flex align-items-center">
+                <!-- Notification Bell - Fix display-->
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell"></i>
+                        {% if notifications_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ notifications_count }}
+                            <span class="visually-hidden">unread notifications</span>
+                        </span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu notification-dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationsDropdown">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">Notifications</h6>
+                            <span class="badge bg-mopia rounded-pill">{{ notifications_count }}</span>
+                        </div>
+                        <div class="notification-dropdown">
+                            {% if notifications %}
+                                {% for notification in notifications %}
+                                <div class="dropdown-item border-bottom p-3 notification-item {% if notification.is_read %}read{% endif %}" data-notification-id="{{ notification.id }}">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="me-2">
+                                            <small class="text-muted">{{ notification.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="ms-auto">
+                                            <span class="badge bg-mopia">{{ notification.service_name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="notification-message">
+                                        {{ notification.message }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="dropdown-item p-3 text-center">
+                                    <p class="mb-0 text-muted">No new notifications</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-2 border-top text-center">
+                            <a href="#" id="mark-all-as-read" class="text-decoration-none text-mopia">Mark all as read</a>
+                        </div>
+                    </ul>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i> {{ user.first_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="{% url 'user_dashboard' %}"><i class="bi bi-calendar-check"></i> Booking</a></li>
+                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 fade-in">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Tab Navigation -->
+    <div class="tab-container">
+        <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-content" type="button" role="tab" aria-controls="calendar-content" aria-selected="true">
+                    <i class="bi bi-calendar-plus me-1"></i> Book a Service
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings-content" type="button" role="tab" aria-controls="bookings-content" aria-selected="false">
+                    <i class="bi bi-list-check me-1"></i> My Bookings <span class="badge rounded-pill bg-mopia ms-1">{{ bookings|length }}</span>
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- Calendar and Booking Form Tab -->
+            <div class="tab-pane fade show active" id="calendar-content" role="tabpanel" aria-labelledby="calendar-tab">
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="calendar-card card">
+                            <div class="card-header py-3">
+                                <h5 class="mb-0">Your Booking Calendar</h5>
+                            </div>
+                            <div class="card-body calendar-container">
+                                <div id="calendar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="booking-form">
+                            <h3 class="fw-bold mb-4 text-mopia">Confirm Your Booking</h3>
+                            <form id="confirm-booking-form">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="service" class="form-label">Service Type</label>
+                                    <select class="form-select" id="service" name="service" required {% if not db_ready %}disabled{% endif %}>
+                                        <option value="">Select a service</option>
+                                        {% for service in services %}
+                                            <option value="{{ service.id }}" data-description="{{ service.description }}" data-price="{{ service.price }}">
+                                                {{ service.name }} - ₱{{ service.price }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="service-price-display" class="mt-2 text-primary fw-bold d-none"></div>
+                                    <div id="service-description-display" class="mt-2 small text-muted d-none"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="date" name="date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="time" class="form-label">Time</label>
+                                    <select class="form-select" id="time" name="time" required>
+                                        <option value="">Select a time</option>
+                                        <option value="08:00:00">8:00 AM</option>
+                                        <option value="10:00:00">10:00 AM</option>
+                                        <option value="12:00:00">12:00 PM</option>
+                                        <option value="14:00:00">2:00 PM</option>
+                                        <option value="16:00:00">4:00 PM</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                                </div>
+                                <button type="button" id="book-now-btn" class="btn btn-mopia w-100">Book Now</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Booking History Tab -->
+            <div class="tab-pane fade" id="bookings-content" role="tabpanel" aria-labelledby="bookings-tab">
+                <div class="dashboard-card mb-4">
+                    <div class="card">
+                        <div class="card-header py-3 bg-mopia">
+                            <h5 class="mb-0 text-white">Your Booking History</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if bookings %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Service</th>
+                                                <th>Date & Time</th>
+                                                <th>Address</th>
+                                                <th>Status</th>
+                                                <th>Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for booking in bookings %}
+                                            <tr>
+                                                <td>
+                                                    <div>{{ booking.service.name }}</div>
+                                                </td>
+                                                <td>
+                                                    <div>{{ booking.date|date:"M d, Y" }}</div>
+                                                    <small class="text-muted">{{ booking.time|time:"g:i A" }}</small>
+                                                </td>
+                                                <td>{{ booking.customer.address|truncatechars:30 }}</td>
+                                               <td>
+    <div class="d-flex align-items-center">
+        <span class="status-badge status-{{ booking.status }}">{{ booking.status }}</span>
+        {% if booking.status == 'cancelled' and booking.decline_reason %}
+            <button type="button" class="btn btn-sm text-danger ms-2 decline-reason-btn" 
+                    data-bs-toggle="modal" data-bs-target="#declineReasonModal" 
+                    data-reason="{{ booking.decline_reason }}">
+                <i class="bi bi-exclamation-circle-fill"></i>
+            </button>
+        {% endif %}
+    </div>
+    {% if booking.status == 'cancelled' and booking.decline_reason %}
+        <small class="text-muted d-block mt-1">Click icon to see reason</small>
+    {% endif %}
+</td>
+                                                <td>₱{{ booking.service.price }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
+                                    <p class="lead mb-0">You don't have any bookings yet.</p>
+                                    <p class="text-muted">Go to Book a Service tab to make your first booking.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout from your account?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Summary Modal -->
+<div class="modal fade" id="bookingSummaryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-mopia text-white">
+                <h5 class="modal-title">Booking Summary</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-summary">
+                    <h6 class="mb-3">Service Details</h6>
+                    <table class="booking-summary-table">
+                        <tr>
+                            <td>Service:</td>
+                            <td id="summary-service"></td>
+                        </tr>
+                        <tr>
+                            <td>Date:</td>
+                            <td id="summary-date"></td>
+                        </tr>
+                        <tr>
+                            <td>Time:</td>
+                            <td id="summary-time"></td>
+                        </tr>
+                    </table>
+                    
+                    <div class="booking-summary-divider"></div>
+                    
+                    <h6 class="mb-3">Customer Information</h6>
+                    <table class="booking-summary-table">
+                        <tr>
+                            <td>Name:</td>
+                            <td id="summary-name"></td>
+                        </tr>
+                        <tr>
+                            <td>Email:</td>
+                            <td id="summary-email"></td>
+                        </tr>
+                        <tr>
+                            <td>Phone:</td>
+                            <td id="summary-phone"></td>
+                        </tr>
+                        <tr>
+                            <td>Address:</td>
+                            <td id="summary-address"></td>
+                        </tr>
+                    </table>
+                    
+                    <div class="booking-summary-divider"></div>
+                    
+                    <div class="d-flex justify-content-between align-items-center booking-summary-total">
+                        <span>Total Cost:</span>
+                        <span id="summary-price"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Edit Details</button>
+                <button type="button" id="confirm-booking-final" class="btn btn-mopia">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span id="successToastMessage">Booking confirmed successfully!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                <span id="errorToastMessage">Failed to book. Please try again.</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+<!-- Add this modal for showing decline reasons -->
+<div class="modal fade" id="declineReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Booking Decline Reason</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <h6 class="text-muted mb-3">Your booking was declined for the following reason:</h6>
+                    <div class="alert alert-light border decline-reason-text">
+                        <!-- Reason will be inserted here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-mopia" data-bs-dismiss="modal" 
+                        onclick="document.getElementById('calendar-tab').click()">
+                    Book Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+
+<script>
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize toast components
+        const successToast = new bootstrap.Toast(document.getElementById('successToast'), {
+            delay: 5000
+        });
+        const errorToast = new bootstrap.Toast(document.getElementById('errorToast'), {
+            delay: 5000
+        });
+        
+         document.querySelectorAll('.decline-reason-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const reason = this.getAttribute('data-reason');
+            const reasonElement = document.querySelector('.decline-reason-text');
+            
+            if (reasonElement) {
+                reasonElement.textContent = reason || 'No reason provided.';
+                
+                // Add a highlight animation
+                reasonElement.classList.add('border-danger');
+                setTimeout(() => {
+                    reasonElement.classList.remove('border-danger');
+                }, 1000);
+            } else {
+                console.error('Could not find decline-reason-text element');
+            }
+        });
+    });
+    
+    // Set minimum date to today for the date input field
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').min = today;
+
+     
+        
+        // Initialize calendar with existing bookings
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            selectable: true,
+            selectAllow: function(selectInfo) {
+                // Only allow selection of current or future dates
+                return selectInfo.start >= new Date().setHours(0,0,0,0);
+            },
+            select: function (info) {
+                const selectedDate = new Date(info.startStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (selectedDate >= today) {
+                    document.getElementById('date').value = info.startStr;
+                } else {
+                    // Show error toast for past date selection
+                    document.getElementById('errorToastMessage').textContent = 'Cannot book for past dates';
+                    errorToast.show();
+                }
+            }
+        });
+        
+        // Add user's existing bookings to calendar
+        {% for booking in bookings %}
+            calendar.addEvent({
+                title: '{{ booking.service.name }}',
+                start: '{{ booking.date|date:"Y-m-d" }}T{{ booking.time|time:"H:i:s" }}',
+                allDay: false,
+                backgroundColor: '{{ booking.status }}' === 'pending' ? '#ffc107' : 
+                                '{{ booking.status }}' === 'confirmed' ? '#8DC448' : 
+                                '{{ booking.status }}' === 'completed' ? '#28a745' : '#dc3545',
+                borderColor: '{{ booking.status }}' === 'pending' ? '#ffc107' : 
+                             '{{ booking.status }}' === 'confirmed' ? '#8DC448' : 
+                             '{{ booking.status }}' === 'completed' ? '#28a745' : '#dc3545',
+                extendedProps: {
+                    status: '{{ booking.status }}',
+                    service: '{{ booking.service.name }}'
+                }
+            });
+        {% endfor %}
+        
+        calendar.render();
+        
+        // Initialize modals
+        const bookingSummaryModal = new bootstrap.Modal(document.getElementById('bookingSummaryModal'));
+        
+        // Format date function
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+        
+        // Format time function
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+        
+        // Load temporary booking data from localStorage
+        const tempBooking = JSON.parse(localStorage.getItem('tempBooking'));
+        if (tempBooking) {
+            // Populate the form fields with the temporary booking data
+            document.getElementById('service').value = tempBooking.service;
+            document.getElementById('date').value = tempBooking.date;
+            document.getElementById('time').value = tempBooking.time;
+            document.getElementById('name').value = tempBooking.name;
+            document.getElementById('email').value = tempBooking.email;
+            document.getElementById('phone').value = tempBooking.phone;
+            document.getElementById('address').value = tempBooking.address;
+
+            // Add the booking to the calendar
+            calendar.addEvent({
+                title: 'Your Booking',
+                start: tempBooking.date + 'T' + tempBooking.time,
+                allDay: false,
+                backgroundColor: '#8DC448',
+                borderColor: '#8DC448'
+            });
+        } else {
+            // If no temporary booking, pre-fill with user data if available
+            if ('{{ user.first_name }}') {
+                document.getElementById('name').value = '{{ user.first_name }} {{ user.last_name }}';
+                document.getElementById('email').value = '{{ user.email }}';
+                
+                // Use empty string for phone and address if they are None
+                document.getElementById('phone').value = '{{ user.profile.phone|default_if_none:"" }}';
+                document.getElementById('address').value = '{{ user.profile.address|default_if_none:"" }}';
+            }
+        }
+        
+        // Show service price and description when selected
+        const serviceSelect = document.getElementById('service');
+        const servicePriceDisplay = document.getElementById('service-price-display');
+        const serviceDescriptionDisplay = document.getElementById('service-description-display');
+        
+        if (serviceSelect) {
+            serviceSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    // Display price
+                    const price = selectedOption.getAttribute('data-price');
+                    servicePriceDisplay.textContent = `Price: ₱${price}`;
+                    servicePriceDisplay.classList.remove('d-none');
+                    
+                    // Display description
+                    const description = selectedOption.getAttribute('data-description');
+                    serviceDescriptionDisplay.textContent = description;
+                    serviceDescriptionDisplay.classList.remove('d-none');
+                } else {
+                    servicePriceDisplay.classList.add('d-none');
+                    serviceDescriptionDisplay.classList.add('d-none');
+                }
+            });
+            
+            // If there's a tempBooking, update the price and description display
+            if (tempBooking && tempBooking.service) {
+                serviceSelect.value = tempBooking.service;
+                // Trigger the change event to display price and description
+                const event = new Event('change');
+                serviceSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Book Now button click handler - Show Summary Modal
+        const bookNowBtn = document.getElementById('book-now-btn');
+        bookNowBtn.addEventListener('click', function() {
+            // Collect booking data
+            const serviceSelect = document.getElementById('service');
+            const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+            
+            const bookingData = {
+                serviceId: document.getElementById('service').value,
+                serviceName: selectedOption.value ? selectedOption.textContent.split(' - ')[0] : '',
+                servicePrice: selectedOption.value ? selectedOption.getAttribute('data-price') : '',
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            };
+            
+            // Validate form
+            if (!bookingData.serviceId || !bookingData.date || !bookingData.time || 
+                !bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.address) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Validate date is not in the past
+            const selectedDate = new Date(bookingData.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                document.getElementById('errorToastMessage').textContent = 'Cannot book for past dates';
+                errorToast.show();
+                return;
+            }
+            
+            // Format date and time for display
+            const formattedDate = formatDate(bookingData.date);
+            const formattedTime = bookingData.time ? formatTime(bookingData.time) : '';
+            
+            // Populate summary modal
+            document.getElementById('summary-service').textContent = bookingData.serviceName;
+            document.getElementById('summary-date').textContent = formattedDate;
+            document.getElementById('summary-time').textContent = formattedTime;
+            document.getElementById('summary-name').textContent = bookingData.name;
+            document.getElementById('summary-email').textContent = bookingData.email;
+            document.getElementById('summary-phone').textContent = bookingData.phone;
+            document.getElementById('summary-address').textContent = bookingData.address;
+            document.getElementById('summary-price').textContent = `₱${bookingData.servicePrice}`;
+            
+            // Show summary modal
+            bookingSummaryModal.show();
+            
+            // Handle final confirmation
+            document.getElementById('confirm-booking-final').onclick = function() {
+                // Create form data for submission
+                const formData = new FormData();
+                formData.append('service', bookingData.serviceId);
+                formData.append('date', bookingData.date);
+                formData.append('time', bookingData.time);
+                formData.append('name', bookingData.name);
+                formData.append('email', bookingData.email);
+                formData.append('phone', bookingData.phone);
+                formData.append('address', bookingData.address);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                // Submit the booking as form data
+                fetch("{% url 'booking_submit' %}", {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Close modal
+                        bookingSummaryModal.hide();
+                        
+                        // Show success toast
+                        document.getElementById('successToastMessage').textContent = 'Booking confirmed successfully!';
+                        successToast.show();
+                        
+                        // Reload the page after a delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        // Handle error with toast
+                        response.text().then(text => {
+                            console.error('Error submitting booking:', text);
+                            document.getElementById('errorToastMessage').textContent = 'Failed to book. Please try again.';
+                            errorToast.show();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    document.getElementById('errorToastMessage').textContent = 'Network error. Please check your connection.';
+                    errorToast.show();
+                });
+            };
+        });
+        
+        // Fetch services if not already populated
+        if (serviceSelect && serviceSelect.options.length <= 1) {
+            // Create API endpoint to fetch services
+            fetch('/api/services/')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing options (keep the first "Select a service" option)
+                    while (serviceSelect.options.length > 1) {
+                        serviceSelect.remove(1);
+                    }
+                    
+                    // Add service options
+                    data.forEach(service => {
+                        const option = document.createElement('option');
+                        option.value = service.id;
+                        option.textContent = `${service.name} - ₱${service.price}`;
+                        option.setAttribute('data-description', service.description);
+                        option.setAttribute('data-price', service.price);
+                        serviceSelect.appendChild(option);
+                    });
+                    
+                    // If there's a tempBooking, set the correct service
+                    if (tempBooking && tempBooking.service) {
+                        serviceSelect.value = tempBooking.service;
+                        // Trigger change to update display
+                        const event = new Event('change');
+                        serviceSelect.dispatchEvent(event);
+                    }
+                })
+                .catch(error => console.error('Error fetching services:', error));
+        }
+        
+        // Handle Mark All as Read functionality
+        const markAllAsReadBtn = document.getElementById('mark-all-as-read');
+        if (markAllAsReadBtn) {
+            markAllAsReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Send request to mark all notifications as read
+                fetch("/mark-notifications-read/", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'mark_all_read' })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Update UI without page reload
+                        const notificationBadge = document.querySelector('.badge.rounded-pill.bg-danger');
+                        if (notificationBadge) {
+                            notificationBadge.style.display = 'none';
+                        }
+                        
+                        // Update notification counter in dropdown
+                        const notificationCounter = document.querySelector('.p-3.border-bottom .badge.bg-mopia');
+                        if (notificationCounter) {
+                            notificationCounter.textContent = '0';
+                        }
+                        
+                        // Mark all notifications as read visually
+                        document.querySelectorAll('.notification-item').forEach(item => {
+                            item.classList.add('read');
+                        });
+                        
+                        // Show success toast
+                        document.getElementById('successToastMessage').textContent = 'All notifications marked as read';
+                        successToast.show();
+                    } else {
+                        console.error('Failed to mark notifications as read');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notifications as read:', error);
+                });
+            });
+        }
+
+        // ===== NEW CODE: Check for new notifications automatically =====
+        
+        // Function to check for new notifications
+        function checkForNewNotifications() {
+            fetch('/check-notifications/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update notification badge
+                const notificationBadge = document.querySelector('.position-absolute.top-0.start-100.translate-middle.badge');
+                
+                if (data.count > 0) {
+                    // Update or show the badge
+                    if (notificationBadge) {
+                        const oldCount = parseInt(notificationBadge.textContent.trim());
+                        notificationBadge.textContent = data.count;
+                        notificationBadge.style.display = 'block';
+                        
+                        // If count increased, play notification sound
+                        if (data.count > oldCount) {
+                            playNotificationSound();
+                        }
+                    } else {
+                        // Create new badge if it doesn't exist
+                        const bellButton = document.getElementById('notificationDropdown');
+                        if (bellButton) {
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                            newBadge.textContent = data.count;
+                            newBadge.innerHTML += '<span class="visually-hidden">unread notifications</span>';
+                            bellButton.appendChild(newBadge);
+                        }
+                    }
+                    
+                    // Update counter in dropdown header
+                    const notificationCounter = document.querySelector('.p-3.border-bottom .badge.bg-mopia');
+                    if (notificationCounter) {
+                        notificationCounter.textContent = data.count;
+                    }
+                    
+                    // Update notification list
+                    updateNotificationsList(data.notifications);
+                } else {
+                    // Hide badge when no notifications
+                    if (notificationBadge) {
+                        notificationBadge.style.display = 'none';
+                    }
+                    
+                    // Update counter
+                    const notificationCounter = document.querySelector('.p-3.border-bottom .badge.bg-mopia');
+                    if (notificationCounter) {
+                        notificationCounter.textContent = '0';
+                    }
+                    
+                    // Show empty message
+                    const notificationDropdown = document.querySelector('.notification-dropdown');
+                    if (notificationDropdown) {
+                        notificationDropdown.innerHTML = `
+                            <div class="dropdown-item p-3 text-center">
+                                <p class="mb-0 text-muted">No new notifications</p>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking for notifications:', error);
+            });
+        }
+        
+        // Function to update the notifications list
+        function updateNotificationsList(notifications) {
+            if (!notifications || !notifications.length) return;
+            
+            const notificationDropdown = document.querySelector('.notification-dropdown');
+            if (!notificationDropdown) return;
+            
+            // Check if we need to clear "No new notifications" message
+            const emptyMessage = notificationDropdown.querySelector('.dropdown-item.text-center');
+            if (emptyMessage) {
+                notificationDropdown.innerHTML = '';
+            }
+            
+            // Add new notifications to the list
+            notifications.forEach(notification => {
+                // Check if notification already exists
+                const existingNotification = document.querySelector(`.notification-item[data-notification-id="${notification.id}"]`);
+                
+                if (!existingNotification) {
+                    // Create new notification item
+                    const notificationItem = document.createElement('div');
+                    notificationItem.className = 'dropdown-item border-bottom p-3 notification-item notification-new';
+                    notificationItem.dataset.notificationId = notification.id;
+                    
+                    notificationItem.innerHTML = `
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">
+                                <small class="text-muted">${new Date(notification.created_at).toLocaleDateString()}</small>
+                            </div>
+                            <div class="ms-auto">
+                                <span class="badge bg-mopia">${notification.service_name}</span>
+                            </div>
+                        </div>
+                        <div class="notification-message">
+                            ${notification.message}
+                        </div>
+                    `;
+                    
+                    // Add to beginning of list
+                    if (notificationDropdown.firstChild) {
+                        notificationDropdown.insertBefore(notificationItem, notificationDropdown.firstChild);
+                    } else {
+                        notificationDropdown.appendChild(notificationItem);
+                    }
+                    
+                    // Remove notification-new class after animation
+                    setTimeout(() => {
+                        notificationItem.classList.remove('notification-new');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Play notification sound (optional)
+        function playNotificationSound() {
+            try {
+                const sound = new Audio('/static/sounds/notification.mp3');
+                sound.volume = 0.5;
+                sound.play();
+            } catch (e) {
+                console.log('Notification sound could not be played', e);
+            }
+        }
+        
+        // Check for notifications when page loads
+        checkForNewNotifications();
+        
+        // Then check periodically every 10 seconds
+        setInterval(checkForNewNotifications, 10000);
+    });
+</script>
+
+
+
+{% endblock %}

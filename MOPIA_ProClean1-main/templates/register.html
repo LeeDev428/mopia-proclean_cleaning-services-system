@@ -1,0 +1,618 @@
+<!-- filepath: c:\Users\grafr\MOPIA_ProClean1-main\templates\register.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Keep existing styles */
+    .register-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .register-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .register-header {
+        background-color: #A0D889;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Password field styles */
+    .password-field-wrapper {
+        position: relative;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .toggle-password:hover {
+        color: #A0D889;
+    }
+    
+    .password-hint {
+        color: #6c757d;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Form validation styles */
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(.375em + .1875rem) center;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+    }
+    
+    .form-control.is-valid {
+        border-color: #198754;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(.375em + .1875rem) center;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+    }
+    
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .is-invalid ~ .invalid-feedback {
+        display: block;
+    }
+    
+    .address-section {
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        margin-bottom: 20px;
+    }
+    
+    .address-section h5 {
+        margin-bottom: 15px;
+        font-size: 1rem;
+        color: #495057;
+    }
+
+    /* Address field cursor pointer */
+    #address {
+        cursor: pointer;
+    }
+
+    /* Modal backdrop fix */
+    .modal-backdrop {
+        z-index: 1040;
+    }
+
+    .modal {
+        z-index: 1050;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <div class="register-container">
+        <div class="register-card card">
+            <div class="register-header">
+                <h3 class="mb-0">Create an Account</h3>
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" id="registrationForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_first_name" class="form-label">First Name</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_last_name" class="form-label">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        {{ form.username }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_phone" class="form-label">Phone (required)</label>
+                        <input type="tel" name="phone" maxlength="11" pattern="[0-9]{11}" 
+                               class="form-control" id="id_phone" placeholder="11-digit number" required>
+                        <div class="invalid-feedback">Phone number must be exactly 11 digits</div>
+                    </div>
+                    
+                    <!-- Address Field -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" id="address" name="address" class="form-control" 
+                               placeholder="Click to select address" readonly required>
+                        <!-- Hidden fields to store address components -->
+                        <input type="hidden" id="hidden_province" name="province">
+                        <input type="hidden" id="hidden_city" name="city">
+                        <input type="hidden" id="hidden_barangay" name="barangay">
+                        <input type="hidden" id="hidden_street" name="street">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_password1" class="form-label">Password</label>
+                            <div class="password-field-wrapper">
+                                {{ form.password1 }}
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('id_password1')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <small class="password-hint">Must not exceed 11 characters</small>
+                            <div class="password-strength mt-2" id="password-strength">
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted">Password strength: <span id="strength-text">Too weak</span></small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_password2" class="form-label">Confirm Password</label>
+                            <div class="password-field-wrapper">
+                                {{ form.password2 }}
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('id_password2')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div id="password-match" class="mt-2 d-none">
+                                <small class="text-success"><i class="bi bi-check-circle"></i> Passwords match</small>
+                            </div>
+                            <div id="password-mismatch" class="mt-2 d-none">
+                                <small class="text-danger"><i class="bi bi-x-circle"></i> Passwords don't match</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                        <label class="form-check-label" for="termsCheck">I agree to the Terms of Service</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-mopia w-100">Register</button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <p>Already have an account? <a href="{% url 'login' %}" class="text-mopia">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Address Modal -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">Select Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Province -->
+                <div class="mb-3">
+                    <label for="modalProvince" class="form-label">Province</label>
+                    <select id="modalProvince" class="form-select">
+                        <option value="">Select Province</option>
+                        <option value="Batangas">Batangas</option>
+                        <option value="Cavite">Cavite</option>
+                        <option value="Laguna">Laguna</option>
+                        <option value="Quezon">Quezon</option>
+                        <option value="Rizal">Rizal</option>
+                    </select>
+                </div>
+
+                <!-- City -->
+                <div class="mb-3 d-none" id="modalCityGroup">
+                    <label for="modalCity" class="form-label">City/Municipality</label>
+                    <select id="modalCity" class="form-select">
+                        <option value="">Select City/Municipality</option>
+                    </select>
+                </div>
+
+                <!-- Barangay -->
+                <div class="mb-3 d-none" id="modalBarangayGroup">
+                    <label for="modalBarangay" class="form-label">Barangay</label>
+                    <select id="modalBarangay" class="form-select">
+                        <option value="">Select Barangay</option>
+                    </select>
+                </div>
+
+                <!-- Street -->
+                <div class="mb-3 d-none" id="modalStreetGroup">
+                    <label for="modalStreet" class="form-label">Building/Street</label>
+                    <input type="text" id="modalStreet" class="form-control" placeholder="e.g. Unit 5, 123 Purok 3">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="saveAddressBtn" type="button" class="btn btn-primary d-none">Save Address</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Address data structure
+        const addressData = {
+            "Batangas": {
+                "Batangas City": ["Balagtas", "Banaba Center", "Banaba Kanluran", "Banaba Silangan"],
+                "Lipa City": ["Adya", "Anilao", "Antipolo del Norte", "Antipolo del Sur"],
+                "Tanauan City": ["Altura Bata", "Altura Matanda", "Ambulong", "Balele"]
+            },
+            "Cavite": {
+                "Bacoor": ["Alima", "Aniban I", "Aniban II", "Banalan"],
+                "Dasmariñas": ["Bagong Bayan I", "Bagong Bayan II", "Burol I", "Burol II"],
+                "Imus": ["Alapan I-A", "Alapan I-B", "Alapan II-A", "Alapan II-B"]
+            },
+            "Laguna": {
+                "Calamba": ["Bagong Kalsada", "Banadero", "Banlic", "Bañadero"],
+                "Los Baños": ["Anos", "Bagong Silang", "Bambang", "Batong Malake"],
+                "Santa Rosa": ["Aplaya", "Balibago", "Caingin", "Dila"]
+            },
+            "Quezon": {
+                "Lucena City": ["Barra", "Cotta", "Dalahican", "Ibabang Dupay"],
+                "Candelaria": ["Buenavista", "Bukal", "Kinatihan I", "Kinatihan II"],
+                "Tayabas": ["Alitao", "Alsam Ibaba", "Alsam Ilaya", "Angustias"]
+            },
+            "Rizal": {
+                "Antipolo": ["Bagong Nayon", "Beverly Hills", "Calawis", "Cupang"],
+                "Cainta": ["Dayap", "San Andres", "San Isidro", "Santo Domingo"],
+                "Taytay": ["Bagumbayan", "Dolores", "Muzon", "San Juan"]
+            }
+        };
+
+        // Initialize Bootstrap modal
+        let addressModal;
+        
+        // Address field click handler
+        const addressField = document.getElementById('address');
+        if (addressField) {
+            addressField.addEventListener('click', function() {
+                // Initialize modal if not already done
+                if (!addressModal) {
+                    addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+                }
+                addressModal.show();
+            });
+        }
+
+        // Province change handler
+        const modalProvince = document.getElementById('modalProvince');
+        const modalCity = document.getElementById('modalCity');
+        const modalCityGroup = document.getElementById('modalCityGroup');
+        const modalBarangay = document.getElementById('modalBarangay');
+        const modalBarangayGroup = document.getElementById('modalBarangayGroup');
+        const modalStreet = document.getElementById('modalStreet');
+        const modalStreetGroup = document.getElementById('modalStreetGroup');
+        const saveAddressBtn = document.getElementById('saveAddressBtn');
+
+        if (modalProvince) {
+            modalProvince.addEventListener('change', function() {
+                const selectedProvince = this.value;
+                
+                // Reset dependent fields
+                modalCity.innerHTML = '<option value="">Select City/Municipality</option>';
+                modalBarangay.innerHTML = '<option value="">Select Barangay</option>';
+                modalStreet.value = '';
+                
+                if (selectedProvince && addressData[selectedProvince]) {
+                    // Populate cities
+                    Object.keys(addressData[selectedProvince]).forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        modalCity.appendChild(option);
+                    });
+                    
+                    modalCityGroup.classList.remove('d-none');
+                } else {
+                    modalCityGroup.classList.add('d-none');
+                    modalBarangayGroup.classList.add('d-none');
+                    modalStreetGroup.classList.add('d-none');
+                    saveAddressBtn.classList.add('d-none');
+                }
+            });
+        }
+
+        // City change handler
+        if (modalCity) {
+            modalCity.addEventListener('change', function() {
+                const selectedProvince = modalProvince.value;
+                const selectedCity = this.value;
+                
+                // Reset dependent fields
+                modalBarangay.innerHTML = '<option value="">Select Barangay</option>';
+                modalStreet.value = '';
+                
+                if (selectedCity && addressData[selectedProvince] && addressData[selectedProvince][selectedCity]) {
+                    // Populate barangays
+                    addressData[selectedProvince][selectedCity].forEach(barangay => {
+                        const option = document.createElement('option');
+                        option.value = barangay;
+                        option.textContent = barangay;
+                        modalBarangay.appendChild(option);
+                    });
+                    
+                    modalBarangayGroup.classList.remove('d-none');
+                } else {
+                    modalBarangayGroup.classList.add('d-none');
+                    modalStreetGroup.classList.add('d-none');
+                    saveAddressBtn.classList.add('d-none');
+                }
+            });
+        }
+
+        // Barangay change handler
+        if (modalBarangay) {
+            modalBarangay.addEventListener('change', function() {
+                if (this.value) {
+                    modalStreetGroup.classList.remove('d-none');
+                } else {
+                    modalStreetGroup.classList.add('d-none');
+                    saveAddressBtn.classList.add('d-none');
+                }
+            });
+        }
+
+        // Street input handler
+        if (modalStreet) {
+            modalStreet.addEventListener('input', function() {
+                if (this.value.trim() && modalBarangay.value) {
+                    saveAddressBtn.classList.remove('d-none');
+                } else {
+                    saveAddressBtn.classList.add('d-none');
+                }
+            });
+        }
+
+        // Save address handler
+        if (saveAddressBtn) {
+            saveAddressBtn.addEventListener('click', function() {
+                const province = modalProvince.value;
+                const city = modalCity.value;
+                const barangay = modalBarangay.value;
+                const street = modalStreet.value.trim();
+                
+                if (province && city && barangay && street) {
+                    // Combine address
+                    const fullAddress = `${street}, ${barangay}, ${city}, ${province}`;
+                    
+                    // Update main address field
+                    addressField.value = fullAddress;
+                    
+                    // Update hidden fields
+                    document.getElementById('hidden_province').value = province;
+                    document.getElementById('hidden_city').value = city;
+                    document.getElementById('hidden_barangay').value = barangay;
+                    document.getElementById('hidden_street').value = street;
+                    
+                    // Close modal
+                    if (addressModal) {
+                        addressModal.hide();
+                    }
+                }
+            });
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleIcon = event.currentTarget.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+        
+        // Make togglePasswordVisibility function global so onclick works
+        window.togglePasswordVisibility = togglePasswordVisibility;
+        
+        // Phone number validation
+        const phoneField = document.getElementById('id_phone');
+        if (phoneField) {
+            phoneField.addEventListener('input', function(e) {
+                // Remove any non-digit characters
+                this.value = this.value.replace(/\D/g, '');
+                
+                // Validate length
+                if (this.value.length === 11) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (this.value.length > 0) {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                }
+            });
+        }
+        
+        // Form submission handler
+        const form = document.getElementById('registrationForm');
+        form.addEventListener('submit', function(e) {
+            // Phone validation
+            const phone = document.getElementById('id_phone');
+            if (phone.value.length !== 11) {
+                e.preventDefault();
+                phone.classList.add('is-invalid');
+                phone.focus();
+                return false;
+            }
+            
+            // Address validation
+            const address = document.getElementById('address');
+            if (!address.value.trim()) {
+                e.preventDefault();
+                alert('Please select an address');
+                address.focus();
+                return false;
+            }
+            
+            // Password validation
+            const password1 = document.getElementById('id_password1');
+            if (password1 && password1.value.length > 11) {
+                e.preventDefault();
+                alert('Password must not exceed 11 characters');
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Password validation
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        
+        // Add maxlength attribute to password fields
+        if (password1) password1.maxLength = 11;
+        if (password2) password2.maxLength = 11;
+        
+        // Check password match
+        if (password1 && password2) {
+            const checkPasswordMatch = function() {
+                const matchDiv = document.getElementById('password-match');
+                const mismatchDiv = document.getElementById('password-mismatch');
+                
+                if (password2.value === '') {
+                    matchDiv.classList.add('d-none');
+                    mismatchDiv.classList.add('d-none');
+                } else if (password1.value === password2.value) {
+                    matchDiv.classList.remove('d-none');
+                    mismatchDiv.classList.add('d-none');
+                } else {
+                    matchDiv.classList.add('d-none');
+                    mismatchDiv.classList.remove('d-none');
+                }
+            };
+            
+            password1.addEventListener('input', checkPasswordMatch);
+            password2.addEventListener('input', checkPasswordMatch);
+        }
+        
+        // Password strength meter
+        if (password1) {
+            password1.addEventListener('input', function() {
+                const value = password1.value;
+                const strengthBar = document.querySelector('#password-strength .progress-bar');
+                const strengthText = document.getElementById('strength-text');
+                
+                // Simple strength calculation based on length
+                let strength = 0;
+                
+                if (value.length > 0) strength += 20;
+                if (value.length > 4) strength += 20;
+                if (value.length > 7) strength += 20;
+                if (/[A-Z]/.test(value)) strength += 20;
+                if (/[0-9]/.test(value)) strength += 20;
+                
+                // Limit maximum to 100
+                strength = Math.min(strength, 100);
+                
+                // Update UI
+                strengthBar.style.width = strength + '%';
+                
+                // Set color based on strength
+                if (strength < 40) {
+                    strengthBar.className = 'progress-bar bg-danger';
+                    strengthText.textContent = 'Too weak';
+                } else if (strength < 70) {
+                    strengthBar.className = 'progress-bar bg-warning';
+                    strengthText.textContent = 'Medium';
+                } else {
+                    strengthBar.className = 'progress-bar bg-success';
+                    strengthText.textContent = 'Strong';
+                }
+                
+                // Check max length
+                if (value.length > 11) {
+                    strengthBar.className = 'progress-bar bg-danger';
+                    strengthText.textContent = 'Too long: max 11 characters';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

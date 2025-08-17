@@ -1,0 +1,599 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book a Cleaning Service{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+
+<!-- ORIGINAL CSS
+<style>
+    .booking-header {
+        margin-bottom: 3rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    
+    .booking-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background-color: #A0D889;
+    }   
+    
+ 
+    .calendar-container {
+    height: 82vh;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .calendar-container {
+        height: auto;
+        max-height:90vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+}
+
+@media (max-width: 425px) {
+    .calendar-container {
+        height: auto;
+        max-height:90vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+    .calendar-card {
+        border-radius: 10px;    
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+}
+    
+    .calendar-card {
+        border-radius: 10px;    
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .calendar-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .booking-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .booking-form:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: 333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .card-header {
+        background-color: #8DC448;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .fc-button-primary {
+        background-color: #8DC448 !important;
+        border-color: #8DC448 !important;
+    }
+    
+    .fc-button-primary:hover {
+        background-color: #7ab33a !important;
+        border-color: #7ab33a !important;
+    }
+    
+    .fc-daygrid-day.fc-day-today {
+        background-color: rgba(141, 196, 72, 0.1) !important;
+    }
+</style> -->
+
+<!-- MODIFIED CSS -->
+<style>
+    .booking-header {
+        margin-bottom: 3rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    
+    .booking-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background-color: #A0D889;
+    }   
+    
+    
+    .calendar-container {
+    height: 100vh;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+    
+    .calendar-card {
+        border-radius: 10px;    
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .calendar-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .booking-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .booking-form:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: 333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .card-header {
+        background-color: #8DC448;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .fc-button-primary {
+        background-color: #8DC448 !important;
+        border-color: #8DC448 !important;
+    }
+    
+    .fc-button-primary:hover {
+        background-color: #7ab33a !important;
+        border-color: #7ab33a !important;
+    }
+    
+    .fc-daygrid-day.fc-day-today {
+        background-color: rgba(141, 196, 72, 0.1) !important;
+    }
+
+
+@media (max-width: 1024px) {
+    
+    .calendar-card {
+        height: 98vh;
+    }
+
+    .calendar-container {
+        height: auto;
+        max-height:90vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+}    
+
+@media (max-width: 768px) {
+
+    .calendar-card {
+        height: 108vh;
+    
+    }
+    .calendar-container {
+        height: auto;
+        max-height:100vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+}
+/* 
+@media (max-width: 425px) {
+    .calendar-card {
+        height: 100vh;
+    
+    }
+    .calendar-container {
+        height: auto;
+        max-height:200vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+
+}
+
+@media (max-width: 375px) {
+    .calendar-card {
+        height: 100vh;
+    
+    }
+    .calendar-container {
+        height: auto;
+        max-height:120vh;
+    }
+
+    #calendar {
+        font-size: 12px;
+    }
+    
+} */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <h1 class="booking-header fw-bold">Book a Cleaning Service</h1>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4 mb-lg-0 slide-in-left">
+            <div class="calendar-card card">
+                <div class="card-header py-3">
+                    <h5 class="mb-0">Choose Date and Time</h5>
+                </div>
+                <div class="card-body calendar-container">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 slide-in-right">
+            <div class="booking-form">
+                <h3 class="fw-bold mb-4 text-mopia">Request Booking</h3>
+                <form id="booking-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="service" class="form-label">Service Type</label>
+                        <select class="form-select" id="service" name="service" required {% if not db_ready %}disabled{% endif %}>
+                            <option value="">Select a service</option>
+                            {% for service in services %}
+                                <option value="{{ service.id }}" data-description="{{ service.description }}" data-price="{{ service.price }}">
+                                    {{ service.name }} - ₱{{ service.price }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div id="service-price-display" class="mt-2 text-primary fw-bold d-none"></div>
+                        <div id="service-description-display" class="mt-2 small text-muted d-none"></div>
+                        {% if not services %}
+                        <div class="mt-2 text-danger">
+                            <small>No services available. Please try again later or contact support.</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="time" class="form-label">Time</label>
+                        <select class="form-select" id="time" name="time" required>
+                            <option value="">Select a time</option>
+                            <option value="08:00:00">8:00 AM</option>
+                            <option value="10:00:00">10:00 AM</option>
+                            <option value="12:00:00">12:00 PM</option>
+                            <option value="14:00:00">2:00 PM</option>
+                            <option value="16:00:00">4:00 PM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" required>
+                    </div>
+
+                    <!-- NEW CODE FOR ADDRESS -->
+                    <!-- Address Trigger Field -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" id="address" name="address" class="form-control" placeholder=" Click to select address" readonly data-bs-toggle="modal" data-bs-target="#addressModal" required>
+                    </div>
+                    <!-- Address Modal -->
+                    <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content p-3">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addressModalLabel">Select Address</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+
+                            <!-- Province -->
+                            <div class="mb-3">
+                                <label for="modalProvince" class="form-label">Province</label>
+                                <select id="modalProvince" class="form-select">
+                                    <option value="">Select Province</option>
+                                    <option value="Batangas">Batangas</option>
+                                    <option value="Cavite">Cavite</option>
+                                    <option value="Laguna">Laguna</option>
+                                    <option value="Quezon">Quezon</option>
+                                    <option value="Rizal">Rizal</option>
+                                </select>
+                            </div>
+
+                            <!-- City -->
+                            <div class="mb-3 d-none" id="modalCityGroup">
+                                <label for="modalCity" class="form-label">City/Municipality</label>
+                                <select id="modalCity" class="form-select"></select>
+                            </div>
+
+                            <!-- Barangay -->
+                            <div class="mb-3 d-none" id="modalBarangayGroup">
+                                <label for="modalBarangay" class="form-label">Barangay</label>
+                                <select id="modalBarangay" class="form-select"></select>
+                            </div>
+
+                            <!-- Street -->
+                            <div class="mb-3 d-none" id="modalStreetGroup">
+                                <label for="modalStreet" class="form-label">Bldg/Street</label>
+                                <input type="text" id="modalStreet" class="form-control" placeholder="e.g. Unit 5, 123 Purok 3">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="saveAddressBtn" type="button" class="btn btn-primary d-none" data-bs-dismiss="modal">Save Address</button>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- NEW CODE -->
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-mopia w-100" {% if not services %}disabled{% endif %}>Book Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: '/api/available-slots/',
+            selectable: true,
+            selectAllow: function(selectInfo) {
+                // Only allow selection of current or future dates
+                return selectInfo.start >= new Date().setHours(0,0,0,0);
+            },
+            select: function (info) {
+                document.getElementById('date').value = info.startStr;
+            }
+        });
+        calendar.render();
+
+        // Show service price and description when selected
+        const serviceSelect = document.getElementById('service');
+        const servicePriceDisplay = document.getElementById('service-price-display');
+        const serviceDescriptionDisplay = document.getElementById('service-description-display');
+        
+        if (serviceSelect && serviceDescriptionDisplay) {
+            serviceSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    // Display price
+                    const price = selectedOption.getAttribute('data-price');
+                    servicePriceDisplay.textContent = `Price: ₱${price}`;
+                    servicePriceDisplay.classList.remove('d-none');
+                    
+                    // Display description
+                    const description = selectedOption.getAttribute('data-description');
+                    serviceDescriptionDisplay.textContent = description;
+                    serviceDescriptionDisplay.classList.remove('d-none');
+                } else {
+                    servicePriceDisplay.classList.add('d-none');
+                    serviceDescriptionDisplay.classList.add('d-none');
+                }
+            });
+        }
+
+        // Handle booking form submission
+        const bookingForm = document.getElementById('booking-form');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Collect form data
+                const bookingData = {
+                    service: document.getElementById('service').value,
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    address: document.getElementById('address').value,
+                };
+
+                // Validate all fields are filled
+                if (!bookingData.service || !bookingData.date || !bookingData.time || 
+                    !bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.address) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // Store data in localStorage
+                localStorage.setItem('tempBooking', JSON.stringify(bookingData));
+
+                // Redirect to login
+                window.location.href = "{% url 'login' %}";
+            });
+        }
+    });
+    const cityData = {
+    Batangas: ["Batangas City", "Lipa", "Tanauan", "Sto. Tomas"],
+    Cavite: ["Tagaytay", "Dasmariñas", "Imus", "Bacoor"],
+    Laguna: ["San Pablo", "Calamba", "Biñan", "Sta. Rosa"],
+    Quezon: ["Lucena City", "Tayabas", "Sariaya", "Candelaria"],
+    Rizal: ["Antipolo", "Cainta", "Taytay", "Binangonan"]
+};
+
+const barangayData = {
+    "Batangas City": ["Barangay 1", "Barangay 2", "Barangay 3"],
+    "Lipa": ["Barangay A", "Barangay B"],
+    "Lucena City": ["Marketview", "Ibabang Iyam", "Gulang-gulang"]
+};
+
+const modalProvince = document.getElementById('modalProvince');
+const modalCity = document.getElementById('modalCity');
+const modalBarangay = document.getElementById('modalBarangay');
+const modalStreet = document.getElementById('modalStreet');
+
+const modalCityGroup = document.getElementById('modalCityGroup');
+const modalBarangayGroup = document.getElementById('modalBarangayGroup');
+const modalStreetGroup = document.getElementById('modalStreetGroup');
+const saveAddressBtn = document.getElementById('saveAddressBtn');
+const addressField = document.getElementById('address');
+
+modalProvince.addEventListener('change', () => {
+    modalCity.innerHTML = '<option value="">Select City/Municipality</option>';
+    modalBarangay.innerHTML = '<option value="">Select Barangay</option>';
+    modalCityGroup.classList.add('d-none');
+    modalBarangayGroup.classList.add('d-none');
+    modalStreetGroup.classList.add('d-none');
+    saveAddressBtn.classList.add('d-none');
+
+    const selectedProvince = modalProvince.value;
+    if (cityData[selectedProvince]) {
+        cityData[selectedProvince].forEach(city => {
+            modalCity.innerHTML += `<option value="${city}">${city}</option>`;
+        });
+        modalCityGroup.classList.remove('d-none');
+    }
+});
+
+modalCity.addEventListener('change', () => {
+    modalBarangay.innerHTML = '<option value="">Select Barangay</option>';
+    modalBarangayGroup.classList.add('d-none');
+    modalStreetGroup.classList.add('d-none');
+    saveAddressBtn.classList.add('d-none');
+
+    const selectedCity = modalCity.value;
+    if (barangayData[selectedCity]) {
+        barangayData[selectedCity].forEach(brgy => {
+            modalBarangay.innerHTML += `<option value="${brgy}">${brgy}</option>`;
+        });
+        modalBarangayGroup.classList.remove('d-none');
+    }
+});
+
+modalBarangay.addEventListener('change', () => {
+    if (modalBarangay.value) {
+        modalStreetGroup.classList.remove('d-none');
+    } else {
+        modalStreetGroup.classList.add('d-none');
+        saveAddressBtn.classList.add('d-none');
+    }
+});
+
+modalStreet.addEventListener('input', () => {
+    if (modalStreet.value.trim()) {
+        saveAddressBtn.classList.remove('d-none');
+    } else {
+        saveAddressBtn.classList.add('d-none');
+    }
+});
+
+// Save address to main input
+saveAddressBtn.addEventListener('click', () => {
+    const fullAddress = [
+        modalStreet.value.trim(),
+        modalBarangay.value,
+        modalCity.value,
+        modalProvince.value
+    ].filter(Boolean).join(', ');
+    addressField.value = fullAddress;
+});
+
+</script>
+{% endblock %}

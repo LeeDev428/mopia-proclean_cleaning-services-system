@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Services to Staff - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Sidebar styles - match your existing admin dashboard */
+    .sidebar {
+        width: 250px;
+        background-color: #343a40;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-header {
+        padding: 20px;
+        background-color: #8DC448;
+        text-align: center;
+    }
+    
+    .sidebar-nav {
+        margin-top: 30px;
+    }
+    
+    .sidebar-nav .nav-item {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: #ced4da;
+        padding: 12px 20px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-nav .nav-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-nav .nav-link.active,
+    .sidebar-nav .nav-link:hover {
+        background-color: #8DC448;
+        color: white;
+        border-radius: 0;
+    }
+    
+    /* Main content area */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+    
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+    }
+    
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: #333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 196, 72, 0.1);
+    }
+    
+    /* Assignment table */
+    .table-assignments th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .assignment-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* RESPONSIVE ADDITIONS */
+    @media (max-width: 991.98px) {
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: unset;
+        }
+        .main-content {
+            margin-left: 0;
+            padding: 15px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .card,
+        .assignment-card {
+            padding: 10px 0;
+        }
+        .card-header {
+            padding: 10px 15px;
+        }
+        .sidebar-header {
+            padding: 12px;
+        }
+        .sidebar-nav .nav-link {
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+        .main-content h1 {
+            font-size: 1.4rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .sidebar-header h4 {
+            font-size: 1.1rem;
+        }
+        .btn,
+        .btn-mopia,
+        .btn-outline-secondary {
+            font-size: 0.95rem;
+            padding: 8px 12px;
+        }
+        .card-header h5 {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Include the admin panel sidebar -->
+    {% include 'admin/admin_panel.html' %}
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Dashboard Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Assign Services to Staff</h1>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> View Site
+            </a>
+        </div>
+
+        <!-- Alert Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="row">
+            <!-- Assignment Form -->
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Create New Assignment</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'admin_assign_service' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="staff_id" class="form-label">Select Staff</label>
+                                <select class="form-select" id="staff_id" name="staff_id" required>
+                                    <option value="">-- Select Staff Member --</option>
+                                    {% for staff in staff_members %}
+                                        <option value="{{ staff.id }}">
+                                            {{ staff.get_full_name|default:staff.username }}
+                                            {% if staff.email %} ({{ staff.email }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="service_id" class="form-label">Select Service</label>
+                                <select class="form-select" id="service_id" name="service_id" required>
+                                    <option value="">-- Select Service --</option>
+                                    {% for service in services %}
+                                        <option value="{{ service.id }}">
+                                            {{ service.name }} - ${{ service.price }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_primary" name="is_primary" value="1">
+                                <label class="form-check-label" for="is_primary">
+                                    Set as primary service for this staff
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes (optional)</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-mopia">Assign Service</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Assignments -->
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Current Assignments</h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" id="filter-all">All</button>
+                            <button type="button" class="btn btn-outline-secondary" id="filter-primary">Primary Only</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-assignments mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Staff</th>
+                                        <th>Service</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in staff_services %}
+                                    <tr class="assignment-row {% if assignment.is_primary %}primary-service{% endif %}">
+                                        <td>{{ assignment.staff.get_full_name|default:assignment.staff.username }}</td>
+                                        <td>{{ assignment.service.name }}</td>
+                                        <td>
+                                            {% if assignment.is_primary %}
+                                            <span class="badge bg-success">Primary</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Secondary</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary edit-assignment" 
+                                                        data-id="{{ assignment.id }}"
+                                                        data-staff="{{ assignment.staff.id }}"
+                                                        data-service="{{ assignment.service.id }}"
+                                                        data-primary="{{ assignment.is_primary|yesno:'1,0' }}"
+                                                        data-notes="{{ assignment.notes|default:'' }}"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editAssignmentModal">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger delete-assignment" 
+                                                        data-id="{{ assignment.id }}"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteAssignmentModal">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">No service assignments found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Edit Assignment Modal -->
+<div class="modal fade" id="editAssignmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Service Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'admin_update_assignment' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="edit_assignment_id" name="assignment_id">
+                    
+                    <div class="mb-3">
+                        <label for="edit_staff_id" class="form-label">Staff Member</label>
+                        <select class="form-select" id="edit_staff_id" name="staff_id" required>
+                            {% for staff in staff_members %}
+                                <option value="{{ staff.id }}">
+                                    {{ staff.get_full_name|default:staff.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_service_id" class="form-label">Service</label>
+                        <select class="form-select" id="edit_service_id" name="service_id" required>
+                            {% for service in services %}
+                                <option value="{{ service.id }}">{{ service.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="edit_is_primary" name="is_primary" value="1">
+                        <label class="form-check-label" for="edit_is_primary">
+                            Set as primary service for this staff
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="edit_notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Assignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Assignment Modal -->
+<div class="modal fade" id="deleteAssignmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this service assignment?</p>
+                <p class="mb-0 text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" action="{% url 'admin_delete_assignment' %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="delete_assignment_id" name="assignment_id">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Logout</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to log out?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

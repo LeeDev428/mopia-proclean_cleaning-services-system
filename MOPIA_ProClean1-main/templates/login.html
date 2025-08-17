@@ -1,0 +1,158 @@
+<!-- filepath: c:\Users\grafr\MOPIA_ProClean1-main\templates\login.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    .login-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .login-header {
+        background-color: #A0D889;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .btn-mopia {
+        background-color: #A0D889;
+        border-color: #A0D889;
+        color: 333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
+    }
+    
+    .form-control:focus {
+        border-color: #A0D889;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Password visibility toggle */
+    .password-field-wrapper {
+        position: relative;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .toggle-password:hover {
+        color: #A0D889;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <div class="login-container">
+        <div class="login-card card">
+            <div class="login-header">
+                <h3 class="mb-0">Sign In</h3>
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% if needs_verification %}
+                <div class="alert alert-warning">
+                    <p><strong>Email verification required.</strong> Please check your email to verify your account.</p>
+                    <form method="post" action="{% url 'resend_verification' %}" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ user_email }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Resend verification email</button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Password</label>
+                        <div class="password-field-wrapper">
+                            {{ form.password }}
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('id_password')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn btn-mopia w-100">Sign In</button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <p>Don't have an account? <a href="{% url 'register' %}" class="text-mopia">Register</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = event.currentTarget.querySelector('i');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    }
+</script>
+{% endblock %}
