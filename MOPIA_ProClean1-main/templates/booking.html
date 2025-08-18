@@ -285,6 +285,82 @@
     }
     
 } */
+
+    /* Enhanced Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem 15px;
+        }
+        
+        .booking-header h1 {
+            font-size: 2rem;
+            text-align: center;
+        }
+        
+        .booking-header::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .calendar-card {
+            margin-bottom: 2rem;
+        }
+        
+        .form-card {
+            margin-bottom: 2rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .modal-dialog {
+            margin: 1rem;
+        }
+        
+        .modal-body {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .booking-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            padding: 0.75rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1rem;
+        }
+        
+        .modal-content {
+            margin: 0.5rem;
+        }
+        
+        #calendar .fc-toolbar {
+            flex-direction: column;
+        }
+        
+        #calendar .fc-toolbar-chunk {
+            margin: 0.5rem 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -417,11 +493,26 @@
                     <!-- NEW CODE -->
 
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                        <label for="user_note" class="form-label">
+                            <i class="bi bi-chat-text me-2"></i>Special Notes/Instructions 
+                            <small class="text-muted">(Optional)</small>
+                        </label>
+                        <textarea 
+                            class="form-control" 
+                            id="user_note" 
+                            name="user_note" 
+                            rows="3" 
+                            placeholder="Any special notes or instructions? (e.g., 'May aso dito', 'Gate is locked', 'Please ring doorbell twice', etc.)"
+                            maxlength="500"></textarea>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Help our cleaning team serve you better by adding any special instructions or important details about your property.
+                        </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-mopia w-100" {% if not services %}disabled{% endif %}>Book Now</button>
+                    <button type="submit" class="btn btn-mopia w-100" {% if not services %}disabled{% endif %}>
+                        <i class="bi bi-calendar-check me-2"></i>Book Now
+                    </button>
                 </form>
             </div>
         </div>

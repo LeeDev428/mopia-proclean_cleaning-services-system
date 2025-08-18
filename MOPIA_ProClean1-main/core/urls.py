@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/services/', views.api_services, name='api_services'),
     path('admin-service-archive/', views.admin_service_archive, name='admin_service_archive'),
     path('update-booking-status/', views.update_booking_status, name='update_booking_status'),
+    path('update-admin-note/', views.update_admin_note, name='update_admin_note'),
 
     # Correctly named path without underscore (to match the URL in the template)
     path('mark-notifications-read/', views.mark_notifications_read, name='mark_notifications_read'),
@@ -53,8 +54,31 @@ urlpatterns = [
     path('admin-update-assignment/', views.admin_update_assignment, name='admin_update_assignment'),
     path('admin-delete-assignment/', views.admin_delete_assignment, name='admin_delete_assignment'),
 
+    # Admin staff management URLs
+    path('admin-staff/', views.admin_staff, name='admin_staff'),
+    path('admin-staff-create/', views.admin_staff_create, name='admin_staff_create'),
+    path('admin-staff-update/', views.admin_staff_update, name='admin_staff_update'),
+    path('admin-staff-status/', views.admin_staff_status, name='admin_staff_status'),
+
     path('staff/booking/<int:booking_id>/', views.booking_detail, name='staff_booking_detail'),
     path('staff/bookings/', views.staff_bookings, name='staff_bookings'),
     path('staff/assign_booking/', views.staff_assign_booking, name='staff_assign_booking'),
+    
+    # Feedback system URLs
+    path('feedback/<int:booking_id>/', views.feedback_page, name='feedback_page'),
+    path('feedback/submit/<int:booking_id>/', views.submit_feedback, name='submit_feedback'),
+    path('admin-ratings/', views.admin_ratings, name='admin_ratings'),
+    path('admin-respond-feedback/', views.admin_respond_feedback, name='admin_respond_feedback'),
+    path('admin-toggle-featured/', views.admin_toggle_featured, name='admin_toggle_featured'),
+    
+    # Loyal Customers URL
+    path('admin-loyal-customers/', views.admin_loyal_customers, name='admin_loyal_customers'),
+    
+    # Downloadable Reports URLs
+    path('admin-reports/bookings/', views.download_booking_report, name='download_booking_report'),
+    path('admin-reports/services/', views.download_service_report, name='download_service_report'),
+    path('admin-reports/locations/', views.download_location_report, name='download_location_report'),
+    path('admin-reports/staff/', views.download_staff_report, name='download_staff_report'),
+    path('admin-reports/revenue/', views.download_revenue_report, name='download_revenue_report'),
     
 ]

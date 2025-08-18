@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Service Feedback - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feedback-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .feedback-header {
+        background: linear-gradient(135deg, #8DC448 0%, #A0D889 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .feedback-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+    
+    .feedback-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .feedback-body {
+        padding: 2rem;
+    }
+    
+    .service-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #8DC448;
+    }
+    
+    .service-info h5 {
+        color: #22540D;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .rating-section {
+        margin-bottom: 2rem;
+    }
+    
+    .rating-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .star-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stars {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .star {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+    
+    .star:hover,
+    .star.active {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+    
+    .star:hover ~ .star {
+        color: #ddd;
+        transform: scale(1);
+    }
+    
+    .rating-text {
+        font-weight: 500;
+        color: #666;
+        min-width: 120px;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section h6 {
+        color: #22540D;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #8DC448 0%, #A0D889 100%);
+        border: none;
+        color: white;
+        padding: 12px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(141, 196, 72, 0.4);
+        background: linear-gradient(135deg, #7ab33a 0%, #8DC448 100%);
+        color: white;
+    }
+    
+    .recommendation-section {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .recommendation-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .recommendation-btn {
+        padding: 10px 30px;
+        border: 2px solid #ddd;
+        background: white;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .recommendation-btn.active {
+        background: #8DC448;
+        border-color: #8DC448;
+        color: white;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .rating-icon {
+        margin-right: 0.5rem;
+        color: #8DC448;
+    }
+    
+    /* Success state styling */
+    .success-message {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+    
+    .success-icon {
+        font-size: 4rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+    
+    .success-message h3 {
+        color: #22540D;
+        margin-bottom: 1rem;
+    }
+    
+    .success-message p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .feedback-container {
+            margin: 1rem;
+            border-radius: 10px;
+        }
+        
+        .feedback-header {
+            padding: 1.5rem;
+        }
+        
+        .feedback-header h1 {
+            font-size: 2rem;
+        }
+        
+        .feedback-body {
+            padding: 1.5rem;
+        }
+        
+        .star {
+            font-size: 1.5rem;
+        }
+        
+        .recommendation-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .recommendation-btn {
+            width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <div class="feedback-container">
+        <div class="feedback-header">
+            <h1><i class="bi bi-star-fill me-3"></i>Service Feedback</h1>
+            <p>Help us improve by sharing your experience</p>
+        </div>
+        
+        <div class="feedback-body">
+            {% if booking %}
+            <!-- Service Information -->
+            <div class="service-info">
+                <h5><i class="bi bi-info-circle me-2"></i>Service Details</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Service:</strong> {{ booking.service.name }}</p>
+                        <p><strong>Date:</strong> {{ booking.date|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Time:</strong> {{ booking.time|time:"g:i A" }}</p>
+                        {% if booking.assigned_staff %}
+                        <p><strong>Staff:</strong> {{ booking.assigned_staff.get_full_name|default:booking.assigned_staff.username }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feedback Form -->
+            <form id="feedbackForm" method="post" action="{% url 'submit_feedback' booking.id %}">
+                {% csrf_token %}
+                
+                <!-- Overall Rating -->
+                <div class="rating-section">
+                    <label class="rating-label">
+                        <i class="bi bi-star rating-icon"></i>Overall Experience
+                    </label>
+                    <div class="star-rating">
+                        <div class="stars" data-rating="overall_rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <span class="rating-text" id="overall_text">Rate your experience</span>
+                    </div>
+                    <input type="hidden" name="overall_rating" id="overall_rating" required>
+                </div>
+                
+                <!-- Quality Rating -->
+                <div class="rating-section">
+                    <label class="rating-label">
+                        <i class="bi bi-gem rating-icon"></i>Quality of Cleaning
+                    </label>
+                    <div class="star-rating">
+                        <div class="stars" data-rating="quality_rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <span class="rating-text" id="quality_text">Rate the quality</span>
+                    </div>
+                    <input type="hidden" name="quality_rating" id="quality_rating" required>
+                </div>
+                
+                <!-- Punctuality Rating -->
+                <div class="rating-section">
+                    <label class="rating-label">
+                        <i class="bi bi-clock rating-icon"></i>Punctuality & Timeliness
+                    </label>
+                    <div class="star-rating">
+                        <div class="stars" data-rating="punctuality_rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <span class="rating-text" id="punctuality_text">Rate punctuality</span>
+                    </div>
+                    <input type="hidden" name="punctuality_rating" id="punctuality_rating" required>
+                </div>
+                
+                <!-- Staff Behavior Rating -->
+                <div class="rating-section">
+                    <label class="rating-label">
+                        <i class="bi bi-people rating-icon"></i>Staff Behavior & Professionalism
+                    </label>
+                    <div class="star-rating">
+                        <div class="stars" data-rating="staff_behavior_rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <span class="rating-text" id="staff_behavior_text">Rate our staff</span>
+                    </div>
+                    <input type="hidden" name="staff_behavior_rating" id="staff_behavior_rating" required>
+                </div>
+                
+                <!-- Value for Money Rating -->
+                <div class="rating-section">
+                    <label class="rating-label">
+                        <i class="bi bi-currency-dollar rating-icon"></i>Value for Money
+                    </label>
+                    <div class="star-rating">
+                        <div class="stars" data-rating="value_for_money_rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <span class="rating-text" id="value_for_money_text">Rate the value</span>
+                    </div>
+                    <input type="hidden" name="value_for_money_rating" id="value_for_money_rating" required>
+                </div>
+                
+                <!-- Recommendation -->
+                <div class="recommendation-section">
+                    <h6><i class="bi bi-heart me-2"></i>Would you recommend our service?</h6>
+                    <div class="recommendation-buttons">
+                        <button type="button" class="recommendation-btn" data-value="true">
+                            <i class="bi bi-hand-thumbs-up me-2"></i>Yes, I would!
+                        </button>
+                        <button type="button" class="recommendation-btn" data-value="false">
+                            <i class="bi bi-hand-thumbs-down me-2"></i>Not really
+                        </button>
+                    </div>
+                    <input type="hidden" name="would_recommend" id="would_recommend" required>
+                </div>
+                
+                <!-- Text Feedback -->
+                <div class="form-section">
+                    <h6><i class="bi bi-chat-heart me-2"></i>What did you like about our service?</h6>
+                    <textarea class="form-control" name="positive_feedback" rows="3" 
+                              placeholder="Tell us what we did well..."></textarea>
+                </div>
+                
+                <div class="form-section">
+                    <h6><i class="bi bi-lightbulb me-2"></i>How can we improve?</h6>
+                    <textarea class="form-control" name="improvement_feedback" rows="3" 
+                              placeholder="Share your suggestions for improvement..."></textarea>
+                </div>
+                
+                <div class="form-section">
+                    <h6><i class="bi bi-chat-dots me-2"></i>Additional Comments</h6>
+                    <textarea class="form-control" name="additional_comments" rows="3" 
+                              placeholder="Any other comments or feedback..."></textarea>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="text-center pt-3">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="bi bi-send me-2"></i>Submit Feedback
+                    </button>
+                </div>
+            </form>
+            
+            {% else %}
+            <!-- No booking found -->
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-circle text-warning" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">No Booking Found</h3>
+                <p class="text-muted">We couldn't find the booking you're trying to provide feedback for.</p>
+                <a href="{% url 'user_dashboard' %}" class="btn btn-mopia">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Rating functionality
+    const ratingTexts = {
+        1: 'Very Poor',
+        2: 'Poor', 
+        3: 'Average',
+        4: 'Good',
+        5: 'Excellent'
+    };
+    
+    // Handle star ratings
+    document.querySelectorAll('.stars').forEach(starsContainer => {
+        const ratingName = starsContainer.getAttribute('data-rating');
+        const stars = starsContainer.querySelectorAll('.star');
+        const hiddenInput = document.getElementById(ratingName);
+        const textElement = document.getElementById(ratingName.replace('_rating', '_text'));
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                hiddenInput.value = value;
+                textElement.textContent = ratingTexts[value];
+                
+                // Update star display
+                stars.forEach((s, i) => {
+                    if (i < value) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                textElement.textContent = ratingTexts[value];
+                
+                // Preview stars
+                stars.forEach((s, i) => {
+                    if (i < value) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+        
+        starsContainer.addEventListener('mouseleave', function() {
+            const currentValue = parseInt(hiddenInput.value);
+            if (currentValue) {
+                textElement.textContent = ratingTexts[currentValue];
+                stars.forEach((s, i) => {
+                    if (i < currentValue) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            } else {
+                textElement.textContent = textElement.getAttribute('data-default') || 'Click to rate';
+                stars.forEach(s => {
+                    s.style.color = '#ddd';
+                });
+            }
+        });
+    });
+    
+    // Handle recommendation buttons
+    document.querySelectorAll('.recommendation-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            document.getElementById('would_recommend').value = value;
+            
+            // Update button states
+            document.querySelectorAll('.recommendation-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
+    
+    // Form validation
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        const requiredRatings = ['overall_rating', 'quality_rating', 'punctuality_rating', 'staff_behavior_rating', 'value_for_money_rating'];
+        let valid = true;
+        
+        // Check all ratings are provided
+        requiredRatings.forEach(rating => {
+            const input = document.getElementById(rating);
+            if (!input.value) {
+                valid = false;
+                alert('Please provide all ratings before submitting.');
+                return false;
+            }
+        });
+        
+        // Check recommendation is selected
+        if (!document.getElementById('would_recommend').value) {
+            valid = false;
+            alert('Please let us know if you would recommend our service.');
+            return false;
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+        }
+    });
+    
+    // Add smooth animations
+    const sections = document.querySelectorAll('.rating-section, .form-section, .recommendation-section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            section.style.transition = 'all 0.5s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

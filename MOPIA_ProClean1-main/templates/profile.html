@@ -74,6 +74,56 @@
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .container {
+            padding: 2rem 15px;
+        }
+        
+        .profile-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0 15px;
+        }
+        
+        .user-navbar .navbar-brand {
+            font-size: 1.1rem;
+        }
+        
+        .dropdown-menu {
+            position: static !important;
+            transform: none !important;
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .profile-container {
+            padding: 0 10px;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .user-navbar .navbar-brand {
+            font-size: 1rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .form-control {
+            padding: 0.75rem;
+        }
+    }
 </style>
 {% endblock %}
 

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.db.utils import ProgrammingError, OperationalError
-from .models import UserProfile
+from .models import UserProfile, Booking
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
@@ -70,3 +70,53 @@ class RegistrationForm(UserCreationForm):
                 pass
         
         return user
+
+
+class BookingForm(forms.ModelForm):
+    user_note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Any special notes or instructions? (e.g., "May aso dito", "Gate is locked", etc.)',
+            'rows': 3,
+            'maxlength': 500
+        }),
+        help_text="Optional: Add any special instructions or notes for our cleaning team",
+        label="Special Notes/Instructions"
+    )
+    
+    class Meta:
+        model = Booking
+        fields = ['user_note']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user_note'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Any special notes or instructions? (e.g., "May aso dito", "Gate is locked", etc.)',
+        })
+
+
+class AdminBookingForm(forms.ModelForm):
+    admin_note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Admin notes about service requirements (e.g., "We will use your water supply and electricity")',
+            'rows': 3,
+            'maxlength': 500
+        }),
+        help_text="Add service requirements or important information for the customer",
+        label="Service Requirements/Admin Notes"
+    )
+    
+    class Meta:
+        model = Booking
+        fields = ['admin_note']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['admin_note'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Admin notes about service requirements (e.g., "We will use your water supply and electricity")',
+        })

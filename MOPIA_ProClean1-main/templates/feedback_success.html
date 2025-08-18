@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Thank You - Mopia Cleaning Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .thank-you-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        color: #28a745;
+        margin-bottom: 2rem;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 20%, 60%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-20px);
+        }
+        80% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    .thank-you-title {
+        color: #22540D;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .thank-you-message {
+        color: #666;
+        font-size: 1.2rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-home {
+        background: linear-gradient(135deg, #8DC448 0%, #A0D889 100%);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(141, 196, 72, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .feedback-summary {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: left;
+    }
+    
+    .rating-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stars {
+        color: #ffc107;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 1s forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 fade-in">
+    <div class="thank-you-container">
+        <i class="bi bi-check-circle-fill success-icon"></i>
+        
+        <h1 class="thank-you-title">Thank You!</h1>
+        
+        <p class="thank-you-message">
+            Your feedback has been submitted successfully. We truly appreciate you taking the time to share your experience with us.
+        </p>
+        
+        {% if feedback %}
+        <div class="feedback-summary">
+            <h5 class="mb-3"><i class="bi bi-star me-2"></i>Your Rating Summary</h5>
+            
+            <div class="rating-display">
+                <span>Overall Experience:</span>
+                <span class="stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= feedback.overall_rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                    ({{ feedback.overall_rating }}/5)
+                </span>
+            </div>
+            
+            <div class="rating-display">
+                <span>Quality of Cleaning:</span>
+                <span class="stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= feedback.quality_rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                    ({{ feedback.quality_rating }}/5)
+                </span>
+            </div>
+            
+            <div class="rating-display">
+                <span>Average Rating:</span>
+                <span class="fw-bold text-success">{{ feedback.average_rating }}/5</span>
+            </div>
+            
+            {% if feedback.would_recommend %}
+            <div class="mt-3 p-2 bg-success text-white rounded text-center">
+                <i class="bi bi-hand-thumbs-up me-2"></i>
+                You would recommend our service!
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="mb-4">
+            <h5 class="text-muted">What happens next?</h5>
+            <p class="text-muted">
+                Our team will review your feedback to continuously improve our services. 
+                If you have any immediate concerns, please contact us directly.
+            </p>
+        </div>
+        
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'user_dashboard' %}" class="btn-home">
+                <i class="bi bi-house me-2"></i>Back to Dashboard
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-success">
+                <i class="bi bi-arrow-left me-2"></i>Home Page
+            </a>
+        </div>
+        
+        <div class="mt-4 text-muted">
+            <small>
+                <i class="bi bi-info-circle me-1"></i>
+                Your feedback helps us maintain our high standards of service quality.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add confetti effect (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple confetti-like animation
+    function createConfetti() {
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = ['#8DC448', '#A0D889', '#ffc107', '#28a745'][Math.floor(Math.random() * 4)];
+                confetti.style.borderRadius = '50%';
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.animation = 'fall 3s linear forwards';
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }, i * 50);
+        }
+    }
+    
+    // Add CSS for falling animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Trigger confetti
+    setTimeout(createConfetti, 500);
+});
+</script>
+{% endblock %}

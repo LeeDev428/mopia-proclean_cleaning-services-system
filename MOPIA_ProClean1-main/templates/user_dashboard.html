@@ -159,10 +159,33 @@
         padding: 25px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
+        height: 95vh; /* Fixed height to match calendar */
+        overflow-y: auto; /* Add vertical scroll */
+        position: sticky;
+        top: 20px;
     }
     
     .booking-form:hover {
         box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+    
+    /* Custom scrollbar for booking form */
+    .booking-form::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .booking-form::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .booking-form::-webkit-scrollbar-thumb {
+        background: #8DC448;
+        border-radius: 10px;
+    }
+    
+    .booking-form::-webkit-scrollbar-thumb:hover {
+        background: #7ab33a;
     }
     
     .btn-mopia {
@@ -408,6 +431,27 @@
         color: #22540D;
     }
     
+    /* Note display styles */
+    .user-note-display, .admin-note-display {
+        font-size: 0.875rem;
+        padding: 0.25rem 0;
+    }
+    
+    .user-note-display .text-truncate {
+        max-width: 150px;
+    }
+    
+    .admin-note-display .text-truncate {
+        max-width: 150px;
+    }
+    
+    .user-note-display:hover .text-truncate,
+    .admin-note-display:hover .text-truncate {
+        overflow: visible;
+        white-space: normal;
+        max-width: none;
+    }
+    
     /* Add notification animation */
     @keyframes notificationPulse {
         0% { transform: scale(1); }
@@ -418,6 +462,161 @@
     .notification-new {
         animation: notificationPulse 1s ease-in-out;
         background-color: rgba(141, 196, 72, 0.1);
+    }
+    
+    /* Mobile Responsive Styles for User Dashboard */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem 15px;
+        }
+        
+        .user-navbar {
+            padding: 8px 0;
+        }
+        
+        .user-navbar .navbar-brand {
+            font-size: 1.1rem;
+        }
+        
+        .dashboard-tabs {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .nav-tabs .nav-link {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .calendar-container {
+            height: auto;
+            max-height: 70vh;
+        }
+        
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .modal-dialog {
+            margin: 1rem;
+        }
+        
+        .stats-card {
+            margin-bottom: 1rem;
+        }
+        
+        .dropdown-menu {
+            position: static !important;
+            transform: none !important;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container-fluid {
+            padding: 0.5rem 10px;
+        }
+        
+        .user-navbar .navbar-brand {
+            font-size: 1rem;
+        }
+        
+        .nav-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        
+        .nav-tabs .nav-link {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            white-space: nowrap;
+        }
+        
+        .calendar-container {
+            max-height: 60vh;
+        }
+        
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1rem;
+        }
+        
+        .btn {
+            font-size: 0.8rem;
+        }
+        
+        .modal-content {
+            margin: 0.5rem;
+        }
+        
+        .stats-card .card-body {
+            padding: 0.75rem;
+        }
+        
+        .stats-card h3 {
+            font-size: 1.2rem;
+        }
+        
+        .fc-toolbar {
+            flex-direction: column;
+        }
+        
+        .fc-toolbar-chunk {
+            margin: 0.5rem 0;
+        }
+        
+        .notification-item {
+            padding: 0.75rem;
+        }
+        
+        .dropdown-toggle {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .nav-tabs .nav-link {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+        
+        .calendar-container {
+            max-height: 50vh;
+        }
+        
+        .table {
+            font-size: 0.75rem;
+        }
+        
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.7rem;
+        }
+        
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+        
+        .stats-card h3 {
+            font-size: 1rem;
+        }
+        
+        .card-body {
+            padding: 0.75rem;
+        }
     }
 </style>
 {% endblock %}
@@ -582,6 +781,67 @@
                                     <label for="address" class="form-label">Address</label>
                                     <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
                                 </div>
+                                
+                                <!-- Payment Section -->
+                                <div class="mb-4 p-3 bg-light rounded">
+                                    <h6 class="mb-3 text-mopia fw-bold">
+                                        <i class="bi bi-credit-card me-2"></i>Payment Information
+                                        <small class="text-danger">(40% Downpayment Required)</small>
+                                    </h6>
+                                    
+                                    <div class="alert alert-info mb-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <strong>Downpayment Required:</strong> 
+                                        <span id="downpayment-amount">Please select a service to see the required downpayment amount.</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="payment_method" name="payment_method" required>
+                                            <option value="">Select Payment Method</option>
+                                            <option value="gcash">GCash</option>
+                                            <option value="paymaya">PayMaya</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="reference_number" class="form-label">Payment Reference Number <span class="text-danger">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="reference_number" 
+                                            name="reference_number" 
+                                            placeholder="Enter payment reference number"
+                                            maxlength="100"
+                                            required>
+                                        <div class="form-text">
+                                            <i class="bi bi-shield-check me-1"></i>
+                                            Enter the reference number from your payment transaction. This will be verified by our admin before confirming your booking.
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Payment Instructions -->
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <strong>Payment Instructions:</strong><br>
+                                            • Send 40% downpayment of the total service cost<br>
+                                            • Save your payment reference number<br>
+                                            • Enter the reference number in the field above<br>
+                                            • Your booking will be pending until payment is verified
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="user_note" class="form-label">
+                                        <i class="bi bi-chat-left-text me-2"></i>Special Instructions (Optional)
+                                    </label>
+                                    <textarea class="form-control" id="user_note" name="user_note" rows="2" 
+                                              placeholder="Any special requests or notes for our team (e.g., 'May aso dito', 'Use back entrance', etc.)"></textarea>
+                                    <div class="form-text">Add any special instructions for our cleaning team.</div>
+                                </div>
                                 <button type="button" id="book-now-btn" class="btn btn-mopia w-100">Book Now</button>
                             </form>
                         </div>
@@ -607,6 +867,8 @@
                                                 <th>Address</th>
                                                 <th>Status</th>
                                                 <th>Price</th>
+                                                <th>Your Note</th>
+                                                <th>Service Note</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -636,6 +898,28 @@
     {% endif %}
 </td>
                                                 <td>₱{{ booking.service.price }}</td>
+                                                <td>
+                                                    {% if booking.user_note %}
+                                                        <div class="user-note-display">
+                                                            <i class="bi bi-chat-left-text text-primary me-1"></i>
+                                                            <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                                                  title="{{ booking.user_note }}">{{ booking.user_note }}</span>
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if booking.admin_note %}
+                                                        <div class="admin-note-display">
+                                                            <i class="bi bi-info-circle text-warning me-1"></i>
+                                                            <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                                                  title="{{ booking.admin_note }}">{{ booking.admin_note }}</span>
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
@@ -724,6 +1008,40 @@
                     </table>
                     
                     <div class="booking-summary-divider"></div>
+                    
+                    <!-- Payment Information Section -->
+                    <h6 class="mb-3">Payment Information</h6>
+                    <table class="booking-summary-table">
+                        <tr>
+                            <td>Payment Method:</td>
+                            <td id="summary-payment-method"></td>
+                        </tr>
+                        <tr>
+                            <td>Reference Number:</td>
+                            <td id="summary-reference-number" class="text-break"></td>
+                        </tr>
+                        <tr>
+                            <td>Downpayment (40%):</td>
+                            <td id="summary-downpayment" class="text-primary fw-bold"></td>
+                        </tr>
+                    </table>
+                    
+                    <div class="alert alert-warning py-2 px-3 mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Your booking will be pending until payment is verified by our admin.</small>
+                    </div>
+                    
+                    <div class="booking-summary-divider"></div>
+                    
+                    <!-- Special Instructions Section -->
+                    <div id="summary-note-section" style="display: none;">
+                        <h6 class="mb-3">Special Instructions</h6>
+                        <div class="alert alert-info py-2 px-3 mb-3">
+                            <i class="bi bi-chat-left-text me-2"></i>
+                            <span id="summary-note"></span>
+                        </div>
+                        <div class="booking-summary-divider"></div>
+                    </div>
                     
                     <div class="d-flex justify-content-between align-items-center booking-summary-total">
                         <span>Total Cost:</span>
@@ -938,6 +1256,8 @@
         if (serviceSelect) {
             serviceSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
+                const downpaymentDisplay = document.getElementById('downpayment-amount');
+                
                 if (selectedOption.value) {
                     // Display price
                     const price = selectedOption.getAttribute('data-price');
@@ -948,9 +1268,14 @@
                     const description = selectedOption.getAttribute('data-description');
                     serviceDescriptionDisplay.textContent = description;
                     serviceDescriptionDisplay.classList.remove('d-none');
+                    
+                    // Calculate and display downpayment (40%)
+                    const downpayment = (parseFloat(price) * 0.4).toFixed(2);
+                    downpaymentDisplay.innerHTML = `<strong>₱${downpayment}</strong> (40% of ₱${price})`;
                 } else {
                     servicePriceDisplay.classList.add('d-none');
                     serviceDescriptionDisplay.classList.add('d-none');
+                    downpaymentDisplay.textContent = 'Please select a service to see the required downpayment amount.';
                 }
             });
             
@@ -979,13 +1304,17 @@
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
-                address: document.getElementById('address').value
+                address: document.getElementById('address').value,
+                user_note: document.getElementById('user_note').value,
+                payment_method: document.getElementById('payment_method').value,
+                reference_number: document.getElementById('reference_number').value
             };
             
             // Validate form
             if (!bookingData.serviceId || !bookingData.date || !bookingData.time || 
-                !bookingData.name || !bookingData.email || !bookingData.phone || !bookingData.address) {
-                alert('Please fill in all required fields');
+                !bookingData.name || !bookingData.email || !bookingData.phone || 
+                !bookingData.address || !bookingData.payment_method || !bookingData.reference_number) {
+                alert('Please fill in all required fields including payment information');
                 return;
             }
             
@@ -1014,6 +1343,26 @@
             document.getElementById('summary-address').textContent = bookingData.address;
             document.getElementById('summary-price').textContent = `₱${bookingData.servicePrice}`;
             
+            // Populate payment information
+            const paymentMethodSelect = document.getElementById('payment_method');
+            const selectedPaymentMethod = paymentMethodSelect.options[paymentMethodSelect.selectedIndex].textContent;
+            document.getElementById('summary-payment-method').textContent = selectedPaymentMethod;
+            document.getElementById('summary-reference-number').textContent = bookingData.reference_number;
+            
+            // Calculate and display downpayment
+            const downpaymentAmount = (parseFloat(bookingData.servicePrice) * 0.4).toFixed(2);
+            document.getElementById('summary-downpayment').textContent = `₱${downpaymentAmount}`;
+            
+            // Handle user note display
+            const noteSection = document.getElementById('summary-note-section');
+            const noteText = document.getElementById('summary-note');
+            if (bookingData.user_note && bookingData.user_note.trim()) {
+                noteText.textContent = bookingData.user_note;
+                noteSection.style.display = 'block';
+            } else {
+                noteSection.style.display = 'none';
+            }
+            
             // Show summary modal
             bookingSummaryModal.show();
             
@@ -1028,33 +1377,38 @@
                 formData.append('email', bookingData.email);
                 formData.append('phone', bookingData.phone);
                 formData.append('address', bookingData.address);
+                formData.append('user_note', bookingData.user_note || '');
+                formData.append('payment_method', bookingData.payment_method);
+                formData.append('reference_number', bookingData.reference_number);
                 formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
                 
                 // Submit the booking as form data
                 fetch("{% url 'booking_submit' %}", {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 })
-                .then(response => {
-                    if (response.ok) {
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                         // Close modal
                         bookingSummaryModal.hide();
                         
-                        // Show success toast
-                        document.getElementById('successToastMessage').textContent = 'Booking confirmed successfully!';
+                        // Show success toast with different message
+                        document.getElementById('successToastMessage').textContent = data.message;
                         successToast.show();
                         
-                        // Reload the page after a delay
+                        // Redirect to feedback page after a delay
                         setTimeout(() => {
-                            window.location.reload();
+                            window.location.href = `/feedback/${data.booking_id}/`;
                         }, 2000);
                     } else {
                         // Handle error with toast
-                        response.text().then(text => {
-                            console.error('Error submitting booking:', text);
-                            document.getElementById('errorToastMessage').textContent = 'Failed to book. Please try again.';
-                            errorToast.show();
-                        });
+                        console.error('Error submitting booking:', data.error);
+                        document.getElementById('errorToastMessage').textContent = data.error || 'Failed to book. Please try again.';
+                        errorToast.show();
                     }
                 })
                 .catch(error => {

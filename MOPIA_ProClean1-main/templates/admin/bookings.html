@@ -19,6 +19,7 @@
                         <th>Customer</th>
                         <th>Service</th>
                         <th>Date & Time</th>
+                        <th>Payment Information</th>
                         <th>Created At</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -34,19 +35,44 @@
                         </td>
                         <td>{{ booking.service.name }}</td>
                         <td>{{ booking.date|date:"M d, Y" }} at {{ booking.time|time:"g:i A" }}</td>
+                        <td>
+                            {% if booking.reference_number %}
+                                <div class="payment-info-compact">
+                                    <div><strong>Method:</strong> {{ booking.payment_method|default:"N/A"|title }}</div>
+                                    <div><strong>Ref No.:</strong> <code>{{ booking.reference_number }}</code></div>
+                                    <div><strong>Downpayment:</strong> ₱{{ booking.downpayment_amount|default:"0.00" }}</div>
+                                    <div class="mt-1">
+                                        {% if booking.is_downpayment_confirmed %}
+                                            <span class="badge bg-success">✓ Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">⏳ Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">No payment info</span>
+                            {% endif %}
+                        </td>
                         <td>{{ booking.created_at|date:"M d, Y" }} {{ booking.created_at|time:"g:i A" }}</td>
                         <td><span class="status-badge status-{{ booking.status }}">{{ booking.status|title }}</span></td>
                         <td>
                             {% if booking.status == 'pending' %}
                             <div class="d-flex gap-2">
-                                <form method="post" action="{% url 'update_booking_status' %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
-                                    <input type="hidden" name="status" value="confirmed">
-                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Accept
-                                    </button>
-                                </form>
+                                <!-- Modified Accept button to trigger the confirmation modal -->
+                                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 accept-booking-btn" 
+                                        data-booking-id="{{ booking.id }}" 
+                                        data-customer-name="{{ booking.customer.name }}"
+                                        data-customer-email="{{ booking.customer.email }}"
+                                        data-customer-phone="{{ booking.customer.phone }}"
+                                        data-customer-address="{{ booking.customer.address }}"
+                                        data-service-name="{{ booking.service.name }}"
+                                        data-service-price="{{ booking.service.price }}"
+                                        data-booking-date="{{ booking.date|date:'M d, Y' }}"
+                                        data-booking-time="{{ booking.time|time:'g:i A' }}"
+                                        data-user-note="{{ booking.user_note|default:'' }}"
+                                        data-admin-note="{{ booking.admin_note|default:'' }}">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Accept
+                                </button>
                                 <!-- Modified Decline button to trigger the modal instead of submitting directly -->
                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 decline-booking-btn" 
                                         data-booking-id="{{ booking.id }}" data-booking-service="{{ booking.service.name }}" 
@@ -55,7 +81,24 @@
                                 </button>
                             </div>
                             {% else %}
-                            <button class="btn btn-sm btn-outline-primary rounded-pill booking-details" data-id="{{ booking.id }}">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill view-details-btn" 
+                                    data-booking-id="{{ booking.id }}"
+                                    data-customer-name="{{ booking.customer.name }}"
+                                    data-customer-email="{{ booking.customer.email }}"
+                                    data-customer-phone="{{ booking.customer.phone }}"
+                                    data-customer-address="{{ booking.customer.address }}"
+                                    data-service-name="{{ booking.service.name }}"
+                                    data-service-price="{{ booking.service.price }}"
+                                    data-booking-date="{{ booking.date|date:'M d, Y' }}"
+                                    data-booking-time="{{ booking.time|time:'g:i A' }}"
+                                    data-booking-status="{{ booking.status }}"
+                                    data-user-note="{{ booking.user_note|default:'' }}"
+                                    data-admin-note="{{ booking.admin_note|default:'' }}"
+                                    data-payment-method="{{ booking.payment_method|default:'' }}"
+                                    data-reference-number="{{ booking.reference_number|default:'' }}"
+                                    data-downpayment-amount="{{ booking.downpayment_amount|default:'0.00' }}"
+                                    data-downpayment-verified="{{ booking.is_downpayment_confirmed|yesno:'true,false' }}"
+                                    data-created-at="{{ booking.created_at|date:'M d, Y g:i A' }}">
                                 <i class="bi bi-info-circle-fill me-1"></i> View Details
                             </button>
                             {% endif %}
@@ -63,7 +106,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-4">No bookings found.</td>
+                        <td colspan="8" class="text-center py-4">No bookings found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -249,6 +292,287 @@
         </div>
     </div>
 </div>
+
+<!-- NEW: Accept Booking Confirmation Modal -->
+<div class="modal fade" id="acceptBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Accept Booking</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <style>
+                    .detail-row {
+                        display: flex;
+                        margin-bottom: 8px;
+                    }
+                    .detail-label {
+                        flex: 0 0 80px;
+                        font-weight: 500;
+                    }
+                    .detail-value {
+                        flex: 1;
+                    }
+                    .payment-info-compact {
+                        font-size: 0.875rem;
+                    }
+                    .payment-info-compact div {
+                        margin-bottom: 2px;
+                    }
+                    .payment-info-compact code {
+                        background-color: #f8f9fa;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        font-size: 0.8rem;
+                    }
+                </style>
+                
+                <div class="booking-details-header d-flex justify-content-between mb-4">
+                    <div>
+                        <h5 id="accept-service-name">Loading...</h5>
+                        <p class="mb-0" id="accept-date-time"></p>
+                    </div>
+                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                </div>
+                
+                <div class="row">
+                    <!-- Customer Info -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Customer Information</h6>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Name:</strong></div>
+                            <div class="detail-value" id="accept-customer-name"></div>
+                        </div>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Phone:</strong></div>
+                            <div class="detail-value" id="accept-customer-phone"></div>
+                        </div>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Email:</strong></div>
+                            <div class="detail-value" id="accept-customer-email"></div>
+                        </div>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Address:</strong></div>
+                            <div class="detail-value" id="accept-customer-address"></div>
+                        </div>
+                        <!-- Payment Info -->
+                        <h6 class="mb-3 mt-4">Payment Information</h6>
+                        <div id="accept-payment-info">
+                            <div class="detail-row mb-2">
+                                <div class="detail-label"><strong>Method:</strong></div>
+                                <div class="detail-value" id="accept-payment-method"></div>
+                            </div>
+                            <div class="detail-row mb-2">
+                                <div class="detail-label"><strong>Ref No.:</strong></div>
+                                <div class="detail-value"><code id="accept-reference-number"></code></div>
+                            </div>
+                            <div class="detail-row mb-2">
+                                <div class="detail-label"><strong>Downpayment:</strong></div>
+                                <div class="detail-value">
+                                    ₱<span id="accept-downpayment-amount"></span>
+                                    <span id="accept-downpayment-status" class="ms-2"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Info -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Service Details</h6>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Service:</strong></div>
+                            <div class="detail-value" id="accept-service-details"></div>
+                        </div>
+                        <div class="detail-row mb-2">
+                            <div class="detail-label"><strong>Price:</strong></div>
+                            <div class="detail-value" id="accept-service-price"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Customer Note Section -->
+                <div class="mb-3" id="accept-user-note-section" style="display: none;">
+                    <h6 class="mb-2">
+                        <i class="bi bi-chat-left-text text-primary me-2"></i>Customer's Special Instructions
+                    </h6>
+                    <div class="alert alert-info py-2 px-3">
+                        <small id="accept-user-note"></small>
+                    </div>
+                </div>
+                
+                <!-- Admin Note Section -->
+                <form id="accept-booking-form" action="{% url 'update_booking_status' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" id="accept-booking-id" name="booking_id">
+                    <input type="hidden" name="status" value="confirmed">
+                    
+                    <div class="mb-3">
+                        <label for="accept-admin-note" class="form-label">
+                            <i class="bi bi-info-circle text-warning me-2"></i>Service Requirements Note (Optional)
+                        </label>
+                        <textarea class="form-control" id="accept-admin-note" name="admin_note" rows="3" 
+                                  placeholder="Add any service requirements or special instructions (e.g., 'We will use your water supply and electricity', 'Please ensure pets are secured')"></textarea>
+                        <div class="form-text">This note will be visible to the customer and staff to inform them about service requirements.</div>
+                    </div>
+                    
+                    <!-- Quick select admin notes -->
+                    <div class="mb-3">
+                        <label class="form-label">Quick Select Service Notes:</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-info admin-note-preset" 
+                                    data-note="We will use your water supply and electricity for our equipment.">Water & Electricity</button>
+                            <button type="button" class="btn btn-sm btn-outline-info admin-note-preset" 
+                                    data-note="Please ensure pets are secured in a safe area during cleaning.">Pet Safety</button>
+                            <button type="button" class="btn btn-sm btn-outline-info admin-note-preset" 
+                                    data-note="Please clear all personal items from surfaces to be cleaned.">Clear Surfaces</button>
+                            <button type="button" class="btn btn-sm btn-outline-info admin-note-preset" 
+                                    data-note="Our team will arrive 15 minutes early to set up equipment.">Early Arrival</button>
+                            <button type="button" class="btn btn-sm btn-outline-info admin-note-preset" 
+                                    data-note="Please provide access to all areas that need cleaning.">Access Required</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm-accept-booking">
+                    <i class="bi bi-check-circle-fill me-1"></i> Accept Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Booking Details Modal -->
+<div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle-fill me-2"></i>Booking Details #<span id="detail-booking-id"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Customer Information -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-person-fill me-2"></i>Customer Information
+                        </h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td id="detail-customer-name"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td id="detail-customer-email"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td id="detail-customer-phone"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Address:</strong></td>
+                                <td id="detail-customer-address"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Service Information -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-success mb-3">
+                            <i class="bi bi-tools me-2"></i>Service Information
+                        </h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Service:</strong></td>
+                                <td id="detail-service-name"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td id="detail-booking-date"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Time:</strong></td>
+                                <td id="detail-booking-time"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Price:</strong></td>
+                                <td id="detail-service-price"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span id="detail-booking-status" class="badge"></span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h6 class="text-warning mb-3">
+                            <i class="bi bi-credit-card-fill me-2"></i>Payment Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Method:</strong> <span id="detail-payment-method"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Ref No.:</strong> <code id="detail-reference-number"></code>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Downpayment:</strong> ₱<span id="detail-downpayment-amount"></span>
+                                <span id="detail-payment-status" class="badge ms-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes Section -->
+                <div class="row">
+                    <!-- Customer Note -->
+                    <div class="col-md-6 mb-3" id="detail-user-note-section">
+                        <h6 class="text-info mb-3">
+                            <i class="bi bi-chat-left-text-fill me-2"></i>Customer Instructions
+                        </h6>
+                        <div class="alert alert-light border">
+                            <span id="detail-user-note"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Admin Note -->
+                    <div class="col-md-6 mb-3" id="detail-admin-note-section">
+                        <h6 class="text-warning mb-3">
+                            <i class="bi bi-info-circle-fill me-2"></i>Service Requirements
+                        </h6>
+                        <div class="alert alert-warning border">
+                            <span id="detail-admin-note"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Booking Timeline -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-secondary mb-3">
+                            <i class="bi bi-clock-fill me-2"></i>Booking Timeline
+                        </h6>
+                        <small class="text-muted">Created on: <span id="detail-created-at"></span></small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block admin_extra_js %}
@@ -324,6 +648,151 @@
             
             // Submit the form
             document.getElementById('decline-booking-form').submit();
+        });
+        
+        // NEW: Handle accept booking button clicks
+        document.querySelectorAll('.accept-booking-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookingId = this.getAttribute('data-booking-id');
+                const customerName = this.getAttribute('data-customer-name');
+                const customerEmail = this.getAttribute('data-customer-email');
+                const customerPhone = this.getAttribute('data-customer-phone');
+                const customerAddress = this.getAttribute('data-customer-address');
+                const serviceName = this.getAttribute('data-service-name');
+                const servicePrice = this.getAttribute('data-service-price');
+                const bookingDate = this.getAttribute('data-booking-date');
+                const bookingTime = this.getAttribute('data-booking-time');
+                const userNote = this.getAttribute('data-user-note');
+                const adminNote = this.getAttribute('data-admin-note');
+                
+                // Populate the accept modal with booking details
+                document.getElementById('accept-booking-id').value = bookingId;
+                document.getElementById('accept-service-name').textContent = serviceName;
+                document.getElementById('accept-date-time').textContent = `${bookingDate} at ${bookingTime}`;
+                document.getElementById('accept-customer-name').textContent = customerName;
+                document.getElementById('accept-customer-phone').textContent = customerPhone || 'Not provided';
+                document.getElementById('accept-customer-email').textContent = customerEmail || 'Not provided';
+                document.getElementById('accept-customer-address').textContent = customerAddress;
+                document.getElementById('accept-service-details').textContent = serviceName;
+                document.getElementById('accept-service-price').textContent = `₱${servicePrice}`;
+                document.getElementById('accept-admin-note').value = adminNote || '';
+                
+                // Handle user note display
+                const userNoteSection = document.getElementById('accept-user-note-section');
+                const userNoteText = document.getElementById('accept-user-note');
+                if (userNote && userNote.trim()) {
+                    userNoteText.textContent = userNote;
+                    userNoteSection.style.display = 'block';
+                } else {
+                    userNoteSection.style.display = 'none';
+                }
+                
+                // Show the accept modal
+                const acceptModal = new bootstrap.Modal(document.getElementById('acceptBookingModal'));
+                acceptModal.show();
+            });
+        });
+        
+        // Handle admin note preset buttons
+        document.querySelectorAll('.admin-note-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const noteText = this.getAttribute('data-note');
+                const currentNote = document.getElementById('accept-admin-note').value;
+                
+                // If there's already a note, append with a line break, otherwise just set it
+                if (currentNote.trim()) {
+                    document.getElementById('accept-admin-note').value = currentNote + '\n' + noteText;
+                } else {
+                    document.getElementById('accept-admin-note').value = noteText;
+                }
+            });
+        });
+        
+        // Submit the accept form when confirmed
+        document.getElementById('confirm-accept-booking').addEventListener('click', function() {
+            // Submit the form
+            document.getElementById('accept-booking-form').submit();
+        });
+        
+        // NEW: Handle view details button clicks
+        document.querySelectorAll('.view-details-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookingId = this.getAttribute('data-booking-id');
+                const customerName = this.getAttribute('data-customer-name');
+                const customerEmail = this.getAttribute('data-customer-email');
+                const customerPhone = this.getAttribute('data-customer-phone');
+                const customerAddress = this.getAttribute('data-customer-address');
+                const serviceName = this.getAttribute('data-service-name');
+                const servicePrice = this.getAttribute('data-service-price');
+                const bookingDate = this.getAttribute('data-booking-date');
+                const bookingTime = this.getAttribute('data-booking-time');
+                const bookingStatus = this.getAttribute('data-booking-status');
+                const userNote = this.getAttribute('data-user-note');
+                const adminNote = this.getAttribute('data-admin-note');
+                const paymentMethod = this.getAttribute('data-payment-method');
+                const referenceNumber = this.getAttribute('data-reference-number');
+                const downpaymentAmount = this.getAttribute('data-downpayment-amount');
+                const downpaymentVerified = this.getAttribute('data-downpayment-verified') === 'true';
+                const createdAt = this.getAttribute('data-created-at');
+                
+                // Populate modal with booking details
+                document.getElementById('detail-booking-id').textContent = bookingId;
+                document.getElementById('detail-customer-name').textContent = customerName;
+                document.getElementById('detail-customer-email').textContent = customerEmail;
+                document.getElementById('detail-customer-phone').textContent = customerPhone || 'Not provided';
+                document.getElementById('detail-customer-address').textContent = customerAddress;
+                document.getElementById('detail-service-name').textContent = serviceName;
+                document.getElementById('detail-booking-date').textContent = bookingDate;
+                document.getElementById('detail-booking-time').textContent = bookingTime;
+                document.getElementById('detail-service-price').textContent = '₱' + servicePrice;
+                document.getElementById('detail-created-at').textContent = createdAt;
+                
+                // Set status badge with appropriate styling
+                const statusBadge = document.getElementById('detail-booking-status');
+                statusBadge.textContent = bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1);
+                statusBadge.className = `badge status-${bookingStatus}`;
+                
+                // Payment information
+                document.getElementById('detail-payment-method').textContent = paymentMethod || 'Not provided';
+                document.getElementById('detail-reference-number').textContent = referenceNumber || 'Not provided';
+                document.getElementById('detail-downpayment-amount').textContent = downpaymentAmount;
+                
+                // Payment verification status
+                const paymentStatusBadge = document.getElementById('detail-payment-status');
+                if (downpaymentVerified) {
+                    paymentStatusBadge.textContent = '✓ Verified';
+                    paymentStatusBadge.className = 'badge bg-success ms-2';
+                } else {
+                    paymentStatusBadge.textContent = '⏳ Pending';
+                    paymentStatusBadge.className = 'badge bg-warning ms-2';
+                }
+                
+                // Handle user note display
+                const userNoteSection = document.getElementById('detail-user-note-section');
+                const userNoteText = document.getElementById('detail-user-note');
+                if (userNote && userNote.trim()) {
+                    userNoteText.textContent = userNote;
+                    userNoteSection.style.display = 'block';
+                } else {
+                    userNoteText.textContent = 'No special instructions provided';
+                    userNoteSection.style.display = 'block';
+                }
+                
+                // Handle admin note display
+                const adminNoteSection = document.getElementById('detail-admin-note-section');
+                const adminNoteText = document.getElementById('detail-admin-note');
+                if (adminNote && adminNote.trim()) {
+                    adminNoteText.textContent = adminNote;
+                    adminNoteSection.style.display = 'block';
+                } else {
+                    adminNoteText.textContent = 'No service requirements specified';
+                    adminNoteSection.style.display = 'block';
+                }
+                
+                // Show the details modal
+                const detailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+                detailsModal.show();
+            });
         });
     });
 </script>

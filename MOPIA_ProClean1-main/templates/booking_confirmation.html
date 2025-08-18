@@ -2,6 +2,55 @@
 
 {% block title %}Booking Confirmation{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .container {
+            padding: 2rem 15px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+        }
+        
+        .col-md-6 {
+            padding: 0 15px;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+        }
+        
+        .col-md-6 {
+            padding: 0 10px;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-header h4 {
+            font-size: 1.2rem;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="text-center mb-5">
     <h1 class="mb-3">Booking Confirmed!</h1>

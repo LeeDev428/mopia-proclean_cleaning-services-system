@@ -1,0 +1,392 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block admin_title %}Loyal Customers{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .loyalty-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .loyalty-platinum {
+        background-color: #FFD700;
+        color: #333;
+    }
+    
+    .loyalty-gold {
+        background-color: #FFA500;
+        color: white;
+    }
+    
+    .loyalty-silver {
+        background-color: #C0C0C0;
+        color: #333;
+    }
+    
+    .loyalty-bronze {
+        background-color: #CD7F32;
+        color: white;
+    }
+    
+    .stats-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #8DC448, #A0D889);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .admin-card .table th {
+        background-color: #8DC448;
+        color: white;
+        border: none;
+        font-weight: 600;
+    }
+    
+    .admin-card .table td {
+        vertical-align: middle;
+        border-color: #e9ecef;
+    }
+    
+    .progress {
+        height: 8px;
+    }
+    
+    .rank-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .rank-1 { background-color: #FFD700; color: #333; }
+    .rank-2 { background-color: #C0C0C0; color: #333; }
+    .rank-3 { background-color: #CD7F32; color: white; }
+    .rank-other { background-color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 mb-0">🌟 Loyal Customers</h2>
+        <p class="text-muted mb-0">Track and reward your most valuable customers</p>
+    </div>
+    <div>
+        <button class="btn btn-outline-success">
+            <i class="bi bi-download"></i> Export List
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-number mb-0">{{ total_customers }}</h3>
+                        <p class="mb-0">Total Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-person-check-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-number mb-0">{{ active_customers }}</h3>
+                        <p class="mb-0">Active Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-star-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-number mb-0">{{ platinum_customers }}</h3>
+                        <p class="mb-0">Platinum Members</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-gem" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-number mb-0">{{ gold_customers }}</h3>
+                        <p class="mb-0">Gold Members</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loyalty Levels Legend -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Loyalty Levels</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <span class="loyalty-badge loyalty-platinum">💎 Platinum</span>
+                        <p class="mt-2 mb-0 text-muted">10+ Bookings</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="loyalty-badge loyalty-gold">🥇 Gold</span>
+                        <p class="mt-2 mb-0 text-muted">5-9 Bookings</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="loyalty-badge loyalty-silver">🥈 Silver</span>
+                        <p class="mt-2 mb-0 text-muted">3-4 Bookings</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="loyalty-badge loyalty-bronze">🥉 Bronze</span>
+                        <p class="mt-2 mb-0 text-muted">1-2 Bookings</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="admin-card">
+    <div class="admin-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-trophy"></i> Customer Rankings</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" style="width: auto;">
+                <option>All Levels</option>
+                <option>Platinum</option>
+                <option>Gold</option>
+                <option>Silver</option>
+                <option>Bronze</option>
+            </select>
+            <input type="text" class="form-control form-control-sm" placeholder="Search customers..." style="width: 200px;">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th width="5%">Rank</th>
+                        <th width="20%">Customer</th>
+                        <th width="15%">Contact</th>
+                        <th width="15%">Loyalty Level</th>
+                        <th width="10%">Total Bookings</th>
+                        <th width="10%">Completed</th>
+                        <th width="10%">Pending</th>
+                        <th width="15%">Completion Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer_data in loyal_customers %}
+                    <tr>
+                        <td>
+                            {% with forloop.counter as rank %}
+                            <div class="rank-badge 
+                                {% if rank == 1 %}rank-1
+                                {% elif rank == 2 %}rank-2
+                                {% elif rank == 3 %}rank-3
+                                {% else %}rank-other{% endif %}">
+                                {{ rank }}
+                            </div>
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">
+                                    {{ customer_data.customer.name|first|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ customer_data.customer.name }}</h6>
+                                    <small class="text-muted">{{ customer_data.customer.address|truncatechars:30 }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <small class="d-block"><i class="bi bi-envelope"></i> {{ customer_data.customer.email }}</small>
+                                <small class="d-block"><i class="bi bi-telephone"></i> {{ customer_data.customer.phone }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="loyalty-badge loyalty-{{ customer_data.loyalty_level|lower }}">
+                                {% if customer_data.loyalty_level == 'Platinum' %}💎{% elif customer_data.loyalty_level == 'Gold' %}🥇{% elif customer_data.loyalty_level == 'Silver' %}🥈{% else %}🥉{% endif %}
+                                {{ customer_data.loyalty_level }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary fs-6">{{ customer_data.customer.total_bookings }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ customer_data.customer.completed_bookings }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">{{ customer_data.customer.pending_bookings }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ customer_data.completion_rate }}%"></div>
+                                </div>
+                                <small>{{ customer_data.completion_rate|floatformat:1 }}%</small>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">No loyal customers found</h5>
+                                <p>Start getting bookings to see your loyal customers here!</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if loyal_customers.has_other_pages %}
+<nav aria-label="Customer pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if loyal_customers.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ loyal_customers.previous_page_number }}">Previous</a>
+            </li>
+        {% endif %}
+        
+        {% for num in loyal_customers.paginator.page_range %}
+            {% if loyal_customers.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > loyal_customers.number|add:'-3' and num < loyal_customers.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if loyal_customers.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ loyal_customers.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ loyal_customers.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[placeholder="Search customers..."]');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                tableRows.forEach(row => {
+                    const customerName = row.querySelector('h6')?.textContent.toLowerCase() || '';
+                    const customerEmail = row.querySelector('small')?.textContent.toLowerCase() || '';
+                    
+                    if (customerName.includes(searchTerm) || customerEmail.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Add filter functionality
+        const levelFilter = document.querySelector('select');
+        if (levelFilter) {
+            levelFilter.addEventListener('change', function() {
+                const selectedLevel = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                tableRows.forEach(row => {
+                    const loyaltyBadge = row.querySelector('.loyalty-badge');
+                    if (loyaltyBadge) {
+                        const customerLevel = loyaltyBadge.textContent.toLowerCase();
+                        
+                        if (selectedLevel === 'all levels' || customerLevel.includes(selectedLevel)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

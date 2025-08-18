@@ -1,0 +1,419 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Staff Management - Mopia Admin{% endblock %}
+
+{% block admin_title %}Staff Management{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .staff-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .staff-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    .staff-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .staff-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #8DC448;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .staff-status {
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .btn-mopia {
+        background-color: #8DC448;
+        border-color: #8DC448;
+        color: #333333;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mopia:hover {
+        background-color: #22540D;
+        border-color: #333333;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .form-control:focus {
+        border-color: #8DC448;
+        box-shadow: 0 0 0 0.25rem rgba(141, 196, 72, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Staff List -->
+<div class="dashboard-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Staff Members</h5>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-primary">{{ staff_list.count }} Total</span>
+            <button type="button" class="btn btn-mopia" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                <i class="bi bi-person-plus me-2"></i>Add New Staff
+            </button>
+        </div>
+    </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Staff Member</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Date Joined</th>
+                                <th>Status</th>
+                                <th>Services</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_list %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="staff-avatar me-3">
+                                            {{ staff.first_name|first|default:staff.username|first|upper }}{{ staff.last_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ staff.get_full_name|default:staff.username }}</div>
+                                            {% if staff.profile.phone %}
+                                                <small class="text-muted">{{ staff.profile.phone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ staff.username }}</td>
+                                <td>{{ staff.email|default:"-" }}</td>
+                                <td>{{ staff.date_joined|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if staff.is_active %}
+                                        <span class="staff-status status-active">Active</span>
+                                    {% else %}
+                                        <span class="staff-status status-inactive">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with staff.staffservice_set.count as service_count %}
+                                        {% if service_count > 0 %}
+                                            <span class="badge bg-info">{{ service_count }} Service{{ service_count|pluralize }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No services assigned</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary edit-staff-btn" 
+                                                data-staff-id="{{ staff.id }}"
+                                                data-username="{{ staff.username }}"
+                                                data-email="{{ staff.email }}"
+                                                data-first-name="{{ staff.first_name }}"
+                                                data-last-name="{{ staff.last_name }}"
+                                                data-phone="{{ staff.profile.phone|default:'' }}"
+                                                data-is-active="{{ staff.is_active }}">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        {% if staff.is_active %}
+                                            <button type="button" class="btn btn-sm btn-outline-warning deactivate-staff-btn" 
+                                                    data-staff-id="{{ staff.id }}" data-staff-name="{{ staff.get_full_name|default:staff.username }}">
+                                                <i class="bi bi-pause-circle"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-success activate-staff-btn" 
+                                                    data-staff-id="{{ staff.id }}" data-staff-name="{{ staff.get_full_name|default:staff.username }}">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="bi bi-people fs-1 text-muted mb-3"></i>
+                                    <p class="mb-0">No staff members found.</p>
+                                    <p class="text-muted">Click "Add New Staff" to create the first staff account.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_modals %}
+<div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addStaffModalLabel">Add New Staff Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addStaffForm" method="post" action="{% url 'admin_staff_create' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username *</label>
+                            <input type="text" class="form-control" id="username" name="username" required 
+                                   placeholder="Enter username">
+                            <div class="form-text">This will be used for login</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="Enter email (optional)">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required 
+                                   placeholder="Enter first name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required 
+                                   placeholder="Enter last name">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password *</label>
+                            <input type="password" class="form-control" id="password" name="password" required 
+                                   placeholder="Enter password">
+                            <div class="form-text">Minimum 8 characters</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required 
+                                   placeholder="Confirm password">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                               placeholder="Enter phone number (optional)">
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This account will be created with staff privileges and can access the staff dashboard.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-mopia">
+                        <i class="bi bi-person-plus me-2"></i>Create Staff Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editStaffModalLabel">Edit Staff Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editStaffForm" method="post" action="{% url 'admin_staff_update' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_staff_id" name="staff_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_username" class="form-label">Username *</label>
+                            <input type="text" class="form-control" id="edit_username" name="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email" name="email">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="edit_first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="edit_last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="edit_phone" name="phone">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_new_password" class="form-label">New Password (Optional)</label>
+                        <input type="password" class="form-control" id="edit_new_password" name="new_password" 
+                               placeholder="Leave blank to keep current password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-pencil-square me-2"></i>Update Staff
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Confirmation Modal -->
+<div class="modal fade" id="statusChangeModal" tabindex="-1" aria-labelledby="statusChangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusChangeModalLabel">Confirm Status Change</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="statusChangeMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="statusChangeForm" method="post" action="{% url 'admin_staff_status' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" id="status_staff_id" name="staff_id">
+                    <input type="hidden" id="status_action" name="action">
+                    <button type="submit" id="statusChangeConfirm" class="btn">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password confirmation validation
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePassword() {
+        if (password.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity("Passwords don't match");
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    password.addEventListener('change', validatePassword);
+    confirmPassword.addEventListener('keyup', validatePassword);
+    
+    // Edit staff button handlers
+    document.querySelectorAll('.edit-staff-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const staffId = this.getAttribute('data-staff-id');
+            const username = this.getAttribute('data-username');
+            const email = this.getAttribute('data-email');
+            const firstName = this.getAttribute('data-first-name');
+            const lastName = this.getAttribute('data-last-name');
+            const phone = this.getAttribute('data-phone');
+            
+            document.getElementById('edit_staff_id').value = staffId;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_first_name').value = firstName;
+            document.getElementById('edit_last_name').value = lastName;
+            document.getElementById('edit_phone').value = phone;
+            
+            new bootstrap.Modal(document.getElementById('editStaffModal')).show();
+        });
+    });
+    
+    // Deactivate staff button handlers
+    document.querySelectorAll('.deactivate-staff-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const staffId = this.getAttribute('data-staff-id');
+            const staffName = this.getAttribute('data-staff-name');
+            
+            document.getElementById('status_staff_id').value = staffId;
+            document.getElementById('status_action').value = 'deactivate';
+            document.getElementById('statusChangeMessage').textContent = 
+                `Are you sure you want to deactivate ${staffName}? They will no longer be able to access the staff dashboard.`;
+            document.getElementById('statusChangeConfirm').className = 'btn btn-warning';
+            document.getElementById('statusChangeConfirm').textContent = 'Deactivate';
+            
+            new bootstrap.Modal(document.getElementById('statusChangeModal')).show();
+        });
+    });
+    
+    // Activate staff button handlers
+    document.querySelectorAll('.activate-staff-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const staffId = this.getAttribute('data-staff-id');
+            const staffName = this.getAttribute('data-staff-name');
+            
+            document.getElementById('status_staff_id').value = staffId;
+            document.getElementById('status_action').value = 'activate';
+            document.getElementById('statusChangeMessage').textContent = 
+                `Are you sure you want to activate ${staffName}? They will be able to access the staff dashboard again.`;
+            document.getElementById('statusChangeConfirm').className = 'btn btn-success';
+            document.getElementById('statusChangeConfirm').textContent = 'Activate';
+            
+            new bootstrap.Modal(document.getElementById('statusChangeModal')).show();
+        });
+    });
+});
+</script>
+{% endblock %}

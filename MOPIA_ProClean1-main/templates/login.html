@@ -81,6 +81,66 @@
     .toggle-password:hover {
         color: #A0D889;
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .login-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0 15px;
+        }
+        
+        .container {
+            padding: 2rem 15px;
+        }
+        
+        .login-card {
+            margin: 0;
+        }
+        
+        .login-header {
+            padding: 15px;
+        }
+        
+        .login-header h3 {
+            font-size: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 2rem !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .login-container {
+            padding: 0 10px;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .login-header {
+            padding: 12px;
+        }
+        
+        .login-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            padding: 12px;
+        }
+        
+        .form-control {
+            padding: 12px;
+        }
+    }
 </style>
 {% endblock %}
 

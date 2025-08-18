@@ -257,6 +257,109 @@
             font-size: 1rem;
         }
     }
+    
+    /* Enhanced Mobile Responsive Styles */
+    @media (max-width: 992px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1040;
+        }
+        
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        
+        .mobile-menu-toggle {
+            display: block !important;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: #8DC448;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+    }
+    
+    .mobile-menu-toggle {
+        display: none;
+    }
+    
+    /* Analytics styles */
+    .analytics-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+    }
+    
+    .analytics-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+    }
+    
+    .analytics-content h3 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .analytics-content p {
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 300px;
+    }
+    
+    .chart-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .analytics-table {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 300px;
+        overflow-y: auto;
+    }
+    
+    .table-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .analytics-table .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #333;
+        background-color: #f8f9fa;
+    }
+    
+    .analytics-table .table td {
+        vertical-align: middle;
+    }
+    
     /* --- RESPONSIVE ADDITIONS END HERE --- */
 </style>
 {% endblock %}
@@ -303,9 +406,24 @@
                     <i class="bi bi-person-check"></i> Logistics
                 </a>
             </li>
+                <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_loyal_customers' %}active{% endif %}" href="{% url 'admin_loyal_customers' %}">
+                    <i class="bi bi-star"></i> Loyal Customers
+                </a>
+            </li>
                               <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="bi bi-person-check"></i> Inventory
+                </a>
+            </li>
+                              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_staff' %}active{% endif %}" href="{% url 'admin_staff' %}">
+                    <i class="bi bi-people"></i> Staff
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_ratings' %}active{% endif %}" href="{% url 'admin_ratings' %}">
+                    <i class="bi bi-star"></i> Ratings & Feedback
                 </a>
             </li>
                 <li class="nav-item">
@@ -373,6 +491,178 @@
                     <div class="stats-card">
                         <div class="number">{{ completed_bookings }}</div>
                         <div class="label">Completed Bookings</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Analytics & Reports</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="reportsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-download me-1"></i>Download Reports
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                    <li><a class="dropdown-item" href="{% url 'download_booking_report' %}?type=monthly&period=current">
+                                        <i class="bi bi-calendar-month me-2"></i>Monthly Bookings</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_booking_report' %}?type=quarterly&period=current">
+                                        <i class="bi bi-calendar-range me-2"></i>Quarterly Bookings</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_booking_report' %}?type=annually&period=current">
+                                        <i class="bi bi-calendar-year me-2"></i>Annual Bookings</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_service_report' %}">
+                                        <i class="bi bi-gear me-2"></i>Service Popularity</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_location_report' %}">
+                                        <i class="bi bi-geo-alt me-2"></i>Location Analytics</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_staff_report' %}">
+                                        <i class="bi bi-people me-2"></i>Staff Performance</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'download_revenue_report' %}?type=monthly&period=current">
+                                        <i class="bi bi-currency-dollar me-2"></i>Revenue Report</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Time-based Analytics -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="analytics-card bg-primary text-white">
+                                        <div class="analytics-icon">
+                                            <i class="bi bi-calendar-year"></i>
+                                        </div>
+                                        <div class="analytics-content">
+                                            <h3>{{ bookings_this_year }}</h3>
+                                            <p class="mb-0">This Year</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="analytics-card bg-success text-white">
+                                        <div class="analytics-icon">
+                                            <i class="bi bi-calendar-month"></i>
+                                        </div>
+                                        <div class="analytics-content">
+                                            <h3>{{ bookings_this_month }}</h3>
+                                            <p class="mb-0">This Month</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="analytics-card bg-info text-white">
+                                        <div class="analytics-icon">
+                                            <i class="bi bi-calendar-week"></i>
+                                        </div>
+                                        <div class="analytics-content">
+                                            <h3>{{ bookings_this_week }}</h3>
+                                            <p class="mb-0">This Week</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="analytics-card bg-warning text-white">
+                                        <div class="analytics-icon">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <div class="analytics-content">
+                                            <h3>₱{{ monthly_revenue|floatformat:0 }}</h3>
+                                            <p class="mb-0">Monthly Revenue</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Analytics Tables -->
+                            <div class="row">
+                                <!-- Top Services -->
+                                <div class="col-md-4">
+                                    <div class="analytics-table">
+                                        <h6 class="table-title">Top Services</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Service</th>
+                                                        <th>Bookings</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for service in service_bookings|slice:":5" %}
+                                                    <tr>
+                                                        <td>{{ service.service__name|truncatechars:20 }}</td>
+                                                        <td><span class="badge bg-primary">{{ service.booking_count }}</span></td>
+                                                    </tr>
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">No data available</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Top Locations -->
+                                <div class="col-md-4">
+                                    <div class="analytics-table">
+                                        <h6 class="table-title">Top Locations</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Address</th>
+                                                        <th>Bookings</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for location in location_bookings|slice:":5" %}
+                                                    <tr>
+                                                        <td>{{ location.customer__address|truncatechars:25|default:"Unknown" }}</td>
+                                                        <td><span class="badge bg-success">{{ location.booking_count }}</span></td>
+                                                    </tr>
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">No data available</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Staff Performance -->
+                                <div class="col-md-4">
+                                    <div class="analytics-table">
+                                        <h6 class="table-title">Staff Performance</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Staff</th>
+                                                        <th>Jobs</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for staff in staff_bookings|slice:":5" %}
+                                                    <tr>
+                                                        <td>{{ staff.assigned_staff__first_name|default:staff.assigned_staff__username|truncatechars:15 }}</td>
+                                                        <td><span class="badge bg-info">{{ staff.booking_count }}</span></td>
+                                                    </tr>
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">No data available</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

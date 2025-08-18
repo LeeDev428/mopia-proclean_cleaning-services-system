@@ -133,6 +133,127 @@
     .table-hover tbody tr:hover {
         background-color: rgba(141, 196, 72, 0.1);
     }
+    
+    /* Mobile Responsive Styles for Admin */
+    @media (max-width: 992px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1040;
+        }
+        
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        
+        .mobile-menu-toggle {
+            display: block !important;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: #8DC448;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 280px;
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+        }
+        
+        .sidebar-nav .nav-link {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .main-content {
+            padding: 1rem;
+        }
+        
+        .admin-header {
+            padding: 10px 15px;
+        }
+        
+        .admin-header h4 {
+            font-size: 1.2rem;
+        }
+        
+        .table-responsive {
+            border: none;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .sidebar {
+            width: 250px;
+        }
+        
+        .sidebar-header h5 {
+            font-size: 1rem;
+        }
+        
+        .sidebar-nav .nav-link {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .main-content {
+            padding: 0.5rem;
+        }
+        
+        .admin-header {
+            padding: 8px 12px;
+        }
+        
+        .admin-header h4 {
+            font-size: 1.1rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .mobile-menu-toggle {
+            top: 15px;
+            left: 15px;
+            padding: 8px;
+        }
+    }
+    
+    .mobile-menu-toggle {
+        display: none;
+    }
 </style>
 
 {% endblock %}
@@ -143,6 +264,11 @@
 {% block navbar %}{% endblock %}
 
 {% block content %}
+<!-- Mobile menu toggle button -->
+<button class="mobile-menu-toggle" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+</button>
+
 <div class="dashboard-wrapper">
     <!-- Include Admin Panel -->
     {% include 'admin/admin_panel.html' %}
@@ -208,5 +334,31 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleButton = document.querySelector('.mobile-menu-toggle');
+    
+    if (window.innerWidth <= 992) {
+        if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+            sidebar.classList.remove('show');
+        }
+    }
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    const sidebar = document.querySelector('.sidebar');
+    if (window.innerWidth > 992) {
+        sidebar.classList.remove('show');
+    }
+});
+</script>
 {% block admin_extra_js %}{% endblock %}
 {% endblock %}

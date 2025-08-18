@@ -43,6 +43,45 @@
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(141, 196, 72, 0.3);
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .verify-container {
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        .container {
+            padding: 2rem 15px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .verify-container {
+            margin: 10px auto;
+            padding: 0 10px;
+        }
+        
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .verify-header {
+            padding: 15px;
+        }
+        
+        .verify-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 

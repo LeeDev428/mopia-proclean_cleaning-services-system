@@ -1,15 +1,17 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db.utils import OperationalError, ProgrammingError, IntegrityError
 from django.db import connection  # Add this import for database connection
+from django.db.models import Count, Sum, Q, Avg  # Add analytics imports
 from .models import Service, Customer, Booking, UserProfile, Notification
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth.models import User  # Add this import at the top with other imports
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from decimal import Decimal  # Add this import for decimal calculations
 import json
 import secrets
 # import datetime
@@ -111,13 +113,26 @@ def booking_submit(request):
     email = request.POST.get('email')
     phone = request.POST.get('phone')
     address = request.POST.get('address')
+    user_note = request.POST.get('user_note', '')  # Get user note (optional)
     
-    # Validate all fields are present
-    if not all([service_id, date, time, name, email, phone, address]):
-        messages.error(request, "All fields are required.")
-        return redirect('booking')
+    # Get payment fields
+    payment_method = request.POST.get('payment_method')
+    reference_number = request.POST.get('reference_number')
+    
+    # Validate all required fields are present
+    if not all([service_id, date, time, name, email, phone, address, payment_method, reference_number]):
+        if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded' or 'multipart/form-data' in request.headers.get('Content-Type', ''):
+            # AJAX request - return JSON error
+            return JsonResponse({'success': False, 'error': 'All fields including payment information are required.'}, status=400)
+        else:
+            messages.error(request, "All fields including payment information are required.")
+            return redirect('booking')
     
     try:
+        # Get service to calculate downpayment
+        service = Service.objects.get(id=service_id)
+        downpayment_amount = service.price * Decimal('0.4')  # Calculate 40% downpayment using Decimal
+        
         # Create or update customer
         customer, created = Customer.objects.get_or_create(
             email=email,
@@ -135,14 +150,18 @@ def booking_submit(request):
             customer.address = address
             customer.save()
             
-        # Create the booking
-        service = Service.objects.get(id=service_id)
+        # Create the booking with user note and payment information
         booking = Booking.objects.create(
             customer=customer,
             service=service,
             date=date,
             time=time,
-            status='pending'
+            user_note=user_note,  # Save user note
+            payment_method=payment_method,  # Save payment method
+            reference_number=reference_number,  # Save reference number
+            downpayment_amount=downpayment_amount,  # Save calculated downpayment
+            is_downpayment_confirmed=False,  # Requires admin verification
+            status='pending'  # Still pending until payment is verified
         )
         
         # AUTO-ASSIGN STAFF based on service expertise
@@ -182,12 +201,24 @@ def booking_submit(request):
             except Exception as e:
                 print(f"Error creating notification: {str(e)}")
         
-        messages.success(request, "Your booking has been submitted successfully!")
-        return redirect('booking_confirmation', booking_id=booking.id)
+        # Check if this is an AJAX request (from user dashboard)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'multipart/form-data' in request.headers.get('Content-Type', ''):
+            return JsonResponse({
+                'success': True, 
+                'booking_id': booking.id,
+                'message': 'Your booking has been submitted successfully!'
+            })
+        else:
+            messages.success(request, "Your booking has been submitted successfully!")
+            return redirect('booking_confirmation', booking_id=booking.id)
     
     except Exception as e:
-        messages.error(request, f"Error processing booking: {str(e)}")
-        return redirect('booking')
+        error_msg = f"Error processing booking: {str(e)}"
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'multipart/form-data' in request.headers.get('Content-Type', ''):
+            return JsonResponse({'success': False, 'error': error_msg}, status=500)
+        else:
+            messages.error(request, error_msg)
+            return redirect('booking')
 
 def booking_confirmation(request, booking_id):
     booking = Booking.objects.get(id=booking_id)
@@ -577,7 +608,7 @@ def user_dashboard(request):
 
 @login_required
 def admin_dashboard(request):
-    """Admin dashboard overview."""
+    """Admin dashboard overview with comprehensive analytics."""
     if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
         messages.error(request, "You don't have permission to access this page.")
         return redirect('home')
@@ -588,7 +619,119 @@ def admin_dashboard(request):
             cursor.execute("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='core_booking' AND column_name='created_at')")
             created_at_exists = cursor.fetchone()[0]
         
-        # Get bookings with appropriate ordering and filter for pending status only
+        # Get current date and time
+        now = timezone.now()
+        
+        # Basic stats
+        total_bookings = Booking.objects.all().count()
+        pending_bookings = Booking.objects.filter(status='pending').count()
+        completed_bookings = Booking.objects.filter(status='completed').count()
+        
+        # Time-based analytics
+        # This Year
+        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        if created_at_exists:
+            bookings_this_year = Booking.objects.filter(created_at__gte=year_start).count()
+        else:
+            bookings_this_year = Booking.objects.filter(date__gte=year_start.date()).count()
+        
+        # This Month
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if created_at_exists:
+            bookings_this_month = Booking.objects.filter(created_at__gte=month_start).count()
+        else:
+            bookings_this_month = Booking.objects.filter(date__gte=month_start.date()).count()
+        
+        # This Week
+        week_start = now - timedelta(days=now.weekday())
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        if created_at_exists:
+            bookings_this_week = Booking.objects.filter(created_at__gte=week_start).count()
+        else:
+            bookings_this_week = Booking.objects.filter(date__gte=week_start.date()).count()
+        
+        # Monthly breakdown for the current year
+        monthly_bookings = []
+        for month in range(1, 13):
+            month_start = now.replace(month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+            if month == 12:
+                month_end = month_start.replace(year=month_start.year + 1, month=1)
+            else:
+                month_end = month_start.replace(month=month + 1)
+            
+            if created_at_exists:
+                month_count = Booking.objects.filter(
+                    created_at__gte=month_start, 
+                    created_at__lt=month_end
+                ).count()
+            else:
+                month_count = Booking.objects.filter(
+                    date__gte=month_start.date(), 
+                    date__lt=month_end.date()
+                ).count()
+            monthly_bookings.append(month_count)
+        
+        # Quarterly breakdown
+        quarterly_bookings = []
+        for quarter in range(4):
+            q_start_month = quarter * 3 + 1
+            quarter_start = now.replace(month=q_start_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+            if quarter == 3:  # Q4
+                quarter_end = quarter_start.replace(year=quarter_start.year + 1, month=1)
+            else:
+                quarter_end = quarter_start.replace(month=q_start_month + 3)
+            
+            if created_at_exists:
+                quarter_count = Booking.objects.filter(
+                    created_at__gte=quarter_start,
+                    created_at__lt=quarter_end
+                ).count()
+            else:
+                quarter_count = Booking.objects.filter(
+                    date__gte=quarter_start.date(),
+                    date__lt=quarter_end.date()
+                ).count()
+            quarterly_bookings.append(quarter_count)
+        
+        # Service popularity analytics
+        service_bookings = Booking.objects.values('service__name').annotate(
+            booking_count=Count('id')
+        ).order_by('-booking_count')
+        
+        # Location analytics - Using address field instead of city/barangay
+        # Extract location data from address field
+        location_bookings = Booking.objects.values('customer__address').annotate(
+            booking_count=Count('id')
+        ).order_by('-booking_count')
+        
+        # For city analytics, we'll group by customer for now since city field doesn't exist
+        customer_bookings = Booking.objects.values('customer__name', 'customer__address').annotate(
+            booking_count=Count('id')
+        ).order_by('-booking_count')
+        
+        # Staff performance analytics
+        staff_bookings = Booking.objects.filter(assigned_staff__isnull=False).values(
+            'assigned_staff__first_name', 'assigned_staff__last_name', 'assigned_staff__username'
+        ).annotate(
+            booking_count=Count('id')
+        ).order_by('-booking_count')
+        
+        # Revenue analytics (if service has price field)
+        try:
+            monthly_revenue = Booking.objects.filter(
+                status='completed',
+                **({
+                    'created_at__month': now.month, 
+                    'created_at__year': now.year
+                } if created_at_exists else {
+                    'date__month': now.month, 
+                    'date__year': now.year
+                })
+            ).aggregate(total=Sum('service__price'))['total'] or 0
+        except:
+            monthly_revenue = 0
+        
+        # Get recent bookings for display
         if created_at_exists:
             bookings = Booking.objects.filter(status='pending').order_by('-created_at')
         else:
@@ -602,11 +745,6 @@ def admin_dashboard(request):
         customers = Customer.objects.all()
         services = Service.objects.all()
 
-        # Calculate stats
-        total_bookings = Booking.objects.all().count()
-        pending_bookings = Booking.objects.filter(status='pending').count()
-        completed_bookings = Booking.objects.filter(status='completed').count()
-
         return render(request, 'admin/admin_dashboard.html', {
             'recent_bookings': recent_bookings,
             'customers': customers,
@@ -614,7 +752,18 @@ def admin_dashboard(request):
             'total_bookings': total_bookings,
             'pending_bookings': pending_bookings,
             'completed_bookings': completed_bookings,
-            'created_at_exists': created_at_exists
+            'created_at_exists': created_at_exists,
+            # Analytics data
+            'bookings_this_year': bookings_this_year,
+            'bookings_this_month': bookings_this_month,
+            'bookings_this_week': bookings_this_week,
+            'monthly_bookings': monthly_bookings,
+            'quarterly_bookings': quarterly_bookings,
+            'service_bookings': service_bookings,
+            'location_bookings': location_bookings,
+            'customer_bookings': customer_bookings,
+            'staff_bookings': staff_bookings,
+            'monthly_revenue': monthly_revenue,
         })
     except Exception as e:
         # Print error for debugging
@@ -629,7 +778,18 @@ def admin_dashboard(request):
             'total_bookings': 0,
             'pending_bookings': 0,
             'completed_bookings': 0,
-            'created_at_exists': False
+            'created_at_exists': False,
+            # Empty analytics data for error case
+            'bookings_this_year': 0,
+            'bookings_this_month': 0,
+            'bookings_this_week': 0,
+            'monthly_bookings': [0] * 12,
+            'quarterly_bookings': [0] * 4,
+            'service_bookings': [],
+            'location_bookings': [],
+            'customer_bookings': [],
+            'staff_bookings': [],
+            'monthly_revenue': 0,
         })
 
 @login_required
@@ -870,11 +1030,21 @@ def update_booking_status(request):
     
     booking_id = request.POST.get('booking_id')
     new_status = request.POST.get('status')
+    admin_note = request.POST.get('admin_note', '')  # Get admin note if provided
+    decline_reason = request.POST.get('decline_reason', '')  # Get decline reason if provided
     
     try:
         booking = Booking.objects.select_for_update().get(id=booking_id)
         old_status = booking.status
         booking.status = new_status
+        
+        # Update admin note if provided (usually when confirming bookings)
+        if admin_note.strip():
+            booking.admin_note = admin_note.strip()
+        
+        # Update decline reason if provided (when cancelling/declining bookings)
+        if decline_reason.strip():
+            booking.decline_reason = decline_reason.strip()
         
         # If status is being changed to confirmed and no staff is assigned yet, auto-assign staff
         if new_status == 'confirmed' and not booking.assigned_staff:
@@ -946,6 +1116,35 @@ def update_booking_status(request):
     except Exception as e:
         messages.error(request, f"Error updating booking: {str(e)}")
         return redirect('admin_bookings')
+
+@login_required
+def update_admin_note(request):
+    """Update admin note for a booking."""
+    if request.method == 'POST':
+        booking_id = request.POST.get('booking_id')
+        admin_note = request.POST.get('admin_note', '').strip()
+        
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            booking.admin_note = admin_note
+            booking.save()
+            
+            if admin_note:
+                messages.success(request, f"Service note added for booking #{booking_id}")
+            else:
+                messages.success(request, f"Service note removed from booking #{booking_id}")
+                
+            return redirect('admin_dashboard')
+            
+        except Booking.DoesNotExist:
+            messages.error(request, f"Booking #{booking_id} not found")
+            return redirect('admin_dashboard')
+            
+        except Exception as e:
+            messages.error(request, f"Error updating note: {str(e)}")
+            return redirect('admin_dashboard')
+    
+    return redirect('admin_dashboard')
 
 @login_required
 def check_notifications(request):
@@ -1539,6 +1738,8 @@ def booking_detail(request, booking_id):
             'clock_out': booking.clock_out.strftime('%H:%M:%S') if booking.clock_out else None,
             'work_duration': booking.get_duration() if hasattr(booking, 'get_duration') else None,
             'notes': booking.notes,
+            'user_note': booking.user_note,
+            'admin_note': booking.admin_note,
             'qualified_staff': qualified_staff_names,
         }
         
@@ -1597,3 +1798,813 @@ def staff_get_assignments(request):
         })
     
     return JsonResponse(events, safe=False)
+
+@login_required
+def admin_staff(request):
+    """Admin staff management page."""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    # Get all staff users (users with is_staff=True)
+    staff_list = User.objects.filter(is_staff=True).order_by('-date_joined')
+    
+    return render(request, 'admin/staff_management.html', {
+        'staff_list': staff_list
+    })
+
+@login_required
+def admin_staff_create(request):
+    """Create a new staff member."""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        try:
+            username = request.POST.get('username')
+            email = request.POST.get('email', '')
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+            phone = request.POST.get('phone', '')
+            
+            # Validate required fields
+            if not all([username, first_name, last_name, password, confirm_password]):
+                messages.error(request, "Please fill in all required fields.")
+                return redirect('admin_staff')
+            
+            # Validate password match
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect('admin_staff')
+            
+            # Validate password length
+            if len(password) < 8:
+                messages.error(request, "Password must be at least 8 characters long.")
+                return redirect('admin_staff')
+            
+            # Check if username already exists
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Username already exists. Please choose a different username.")
+                return redirect('admin_staff')
+            
+            # Check if email already exists (if provided)
+            if email and User.objects.filter(email=email).exists():
+                messages.error(request, "Email already exists. Please use a different email.")
+                return redirect('admin_staff')
+            
+            # Create the staff user
+            staff_user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=True  # Automatically set is_staff to True
+            )
+            
+            # Create or update user profile
+            profile, created = UserProfile.objects.get_or_create(user=staff_user)
+            if phone:
+                profile.phone = phone
+                profile.save()
+            
+            messages.success(request, f"Staff account '{username}' created successfully!")
+            
+        except Exception as e:
+            messages.error(request, f"Error creating staff account: {str(e)}")
+    
+    return redirect('admin_staff')
+
+@login_required
+def admin_staff_update(request):
+    """Update an existing staff member."""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        try:
+            staff_id = request.POST.get('staff_id')
+            username = request.POST.get('username')
+            email = request.POST.get('email', '')
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            new_password = request.POST.get('new_password', '')
+            phone = request.POST.get('phone', '')
+            
+            # Get the staff user
+            staff_user = User.objects.get(id=staff_id, is_staff=True)
+            
+            # Validate required fields
+            if not all([username, first_name, last_name]):
+                messages.error(request, "Please fill in all required fields.")
+                return redirect('admin_staff')
+            
+            # Check if username already exists (excluding current user)
+            if User.objects.filter(username=username).exclude(id=staff_id).exists():
+                messages.error(request, "Username already exists. Please choose a different username.")
+                return redirect('admin_staff')
+            
+            # Check if email already exists (excluding current user, if provided)
+            if email and User.objects.filter(email=email).exclude(id=staff_id).exists():
+                messages.error(request, "Email already exists. Please use a different email.")
+                return redirect('admin_staff')
+            
+            # Update user fields
+            staff_user.username = username
+            staff_user.email = email
+            staff_user.first_name = first_name
+            staff_user.last_name = last_name
+            
+            # Update password if provided
+            if new_password:
+                if len(new_password) < 8:
+                    messages.error(request, "New password must be at least 8 characters long.")
+                    return redirect('admin_staff')
+                staff_user.set_password(new_password)
+            
+            staff_user.save()
+            
+            # Update profile
+            profile, created = UserProfile.objects.get_or_create(user=staff_user)
+            profile.phone = phone
+            profile.save()
+            
+            messages.success(request, f"Staff account '{username}' updated successfully!")
+            
+        except User.DoesNotExist:
+            messages.error(request, "Staff member not found.")
+        except Exception as e:
+            messages.error(request, f"Error updating staff account: {str(e)}")
+    
+    return redirect('admin_staff')
+
+@login_required
+def admin_staff_status(request):
+    """Activate or deactivate a staff member."""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        try:
+            staff_id = request.POST.get('staff_id')
+            action = request.POST.get('action')
+            
+            # Get the staff user
+            staff_user = User.objects.get(id=staff_id, is_staff=True)
+            
+            # Prevent admin from deactivating themselves
+            if staff_user == request.user:
+                messages.error(request, "You cannot change your own status.")
+                return redirect('admin_staff')
+            
+            if action == 'activate':
+                staff_user.is_active = True
+                staff_user.save()
+                messages.success(request, f"Staff member '{staff_user.get_full_name() or staff_user.username}' activated successfully!")
+            elif action == 'deactivate':
+                staff_user.is_active = False
+                staff_user.save()
+                messages.success(request, f"Staff member '{staff_user.get_full_name() or staff_user.username}' deactivated successfully!")
+            else:
+                messages.error(request, "Invalid action.")
+                
+        except User.DoesNotExist:
+            messages.error(request, "Staff member not found.")
+        except Exception as e:
+            messages.error(request, f"Error changing staff status: {str(e)}")
+    
+    return redirect('admin_staff')
+
+# ======================== FEEDBACK SYSTEM VIEWS ========================
+
+@login_required
+def feedback_page(request, booking_id):
+    """Display feedback form for a completed booking"""
+    try:
+        # Get the booking and ensure it belongs to the current user
+        booking = get_object_or_404(Booking, id=booking_id)
+        
+        # Check if user has permission to leave feedback for this booking
+        user_can_give_feedback = False
+        
+        if request.user.is_authenticated:
+            # Check if user is the customer for this booking (by email or user link)
+            if hasattr(request.user, 'customer') and booking.customer == request.user.customer:
+                user_can_give_feedback = True
+            elif booking.customer.email == request.user.email:
+                user_can_give_feedback = True
+            elif request.user.is_staff and booking.assigned_staff == request.user:
+                user_can_give_feedback = True
+        
+        if not user_can_give_feedback:
+            messages.error(request, "You don't have permission to access this feedback page.")
+            return redirect('user_dashboard')
+        
+        # Check if feedback already exists
+        from .models import Feedback
+        existing_feedback = Feedback.objects.filter(booking=booking).first()
+        if existing_feedback:
+            messages.info(request, "You have already submitted feedback for this booking.")
+            return redirect('user_dashboard')
+        
+        # Allow feedback for pending, confirmed or completed bookings
+        if booking.status not in ['pending', 'confirmed', 'completed']:
+            messages.warning(request, "Feedback can only be submitted for valid bookings.")
+            return redirect('user_dashboard')
+        
+        return render(request, 'feedback.html', {
+            'booking': booking
+        })
+        
+    except Exception as e:
+        messages.error(request, f"Error loading feedback page: {str(e)}")
+        return redirect('user_dashboard')
+
+@login_required
+def submit_feedback(request, booking_id):
+    """Handle feedback form submission"""
+    if request.method != 'POST':
+        return redirect('feedback_page', booking_id=booking_id)
+    
+    try:
+        # Get the booking and verify permissions
+        booking = get_object_or_404(Booking, id=booking_id)
+        
+        if not (hasattr(request.user, 'customer') and booking.customer == request.user.customer):
+            messages.error(request, "You don't have permission to submit feedback for this booking.")
+            return redirect('user_dashboard')
+        
+        # Check if feedback already exists
+        from .models import Feedback
+        if Feedback.objects.filter(booking=booking).exists():
+            messages.error(request, "Feedback has already been submitted for this booking.")
+            return redirect('user_dashboard')
+        
+        # Get form data
+        overall_rating = int(request.POST.get('overall_rating'))
+        quality_rating = int(request.POST.get('quality_rating'))
+        punctuality_rating = int(request.POST.get('punctuality_rating'))
+        staff_behavior_rating = int(request.POST.get('staff_behavior_rating'))
+        value_for_money_rating = int(request.POST.get('value_for_money_rating'))
+        would_recommend = request.POST.get('would_recommend') == 'true'
+        
+        positive_feedback = request.POST.get('positive_feedback', '').strip()
+        improvement_feedback = request.POST.get('improvement_feedback', '').strip()
+        additional_comments = request.POST.get('additional_comments', '').strip()
+        
+        # Validate ratings
+        ratings = [overall_rating, quality_rating, punctuality_rating, staff_behavior_rating, value_for_money_rating]
+        if not all(1 <= rating <= 5 for rating in ratings):
+            messages.error(request, "All ratings must be between 1 and 5.")
+            return redirect('feedback_page', booking_id=booking_id)
+        
+        # Create feedback
+        feedback = Feedback.objects.create(
+            booking=booking,
+            customer=booking.customer,
+            service=booking.service,
+            assigned_staff=booking.assigned_staff,
+            overall_rating=overall_rating,
+            quality_rating=quality_rating,
+            punctuality_rating=punctuality_rating,
+            staff_behavior_rating=staff_behavior_rating,
+            value_for_money_rating=value_for_money_rating,
+            positive_feedback=positive_feedback or None,
+            improvement_feedback=improvement_feedback or None,
+            additional_comments=additional_comments or None,
+            would_recommend=would_recommend
+        )
+        
+        messages.success(request, "Thank you for your feedback! Your review helps us improve our services.")
+        
+        # Redirect to feedback success page with the feedback data
+        return render(request, 'feedback_success.html', {
+            'feedback': feedback,
+            'booking': booking
+        })
+        
+    except ValueError as e:
+        messages.error(request, "Invalid rating values. Please provide ratings between 1 and 5.")
+        return redirect('feedback_page', booking_id=booking_id)
+    except Exception as e:
+        messages.error(request, f"Error submitting feedback: {str(e)}")
+        return redirect('feedback_page', booking_id=booking_id)
+
+@login_required
+def admin_ratings(request):
+    """Admin view for all customer ratings and feedback"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    try:
+        # Try to import Feedback model
+        try:
+            from .models import Feedback
+        except ImportError:
+            # Feedback model doesn't exist yet, show empty page
+            messages.info(request, "Feedback system not yet initialized. No ratings to display.")
+            return render(request, 'admin/ratings.html', {
+                'feedbacks': [],
+                'analytics': {
+                    'total_feedbacks': 0,
+                    'average_ratings': {
+                        'overall': 0,
+                        'quality': 0,
+                        'punctuality': 0,
+                        'staff_behavior': 0,
+                        'value_for_money': 0,
+                    },
+                    'recommendation_rate': 0,
+                    'rating_distribution': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+                },
+                'services': Service.objects.filter(is_archived=False).order_by('name'),
+                'featured_count': 0,
+            })
+        
+        from django.db.models import Q, Avg
+        
+        # Get all feedbacks
+        feedbacks = Feedback.objects.select_related('customer', 'service', 'assigned_staff', 'booking').order_by('-created_at')
+        
+        # Apply filters
+        service_filter = request.GET.get('service')
+        if service_filter:
+            feedbacks = feedbacks.filter(service_id=service_filter)
+        
+        rating_filter = request.GET.get('rating')
+        if rating_filter:
+            min_rating = int(rating_filter)
+            feedbacks = feedbacks.filter(overall_rating__gte=min_rating)
+        
+        date_range = request.GET.get('date_range')
+        if date_range:
+            now = timezone.now()
+            if date_range == 'week':
+                start_date = now - timedelta(weeks=1)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+            elif date_range == 'quarter':
+                start_date = now - timedelta(days=90)
+            else:
+                start_date = None
+            
+            if start_date:
+                feedbacks = feedbacks.filter(created_at__gte=start_date)
+        
+        # Get analytics
+        try:
+            analytics = Feedback.get_service_analytics()
+        except:
+            analytics = None
+            
+        if not analytics:
+            analytics = {
+                'total_feedbacks': 0,
+                'average_ratings': {
+                    'overall': 0,
+                    'quality': 0,
+                    'punctuality': 0,
+                    'staff_behavior': 0,
+                    'value_for_money': 0,
+                },
+                'recommendation_rate': 0,
+                'rating_distribution': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            }
+        
+        # Get services for filter dropdown
+        services = Service.objects.filter(is_archived=False).order_by('name')
+        
+        # Get featured count
+        try:
+            featured_count = Feedback.objects.filter(is_featured=True).count()
+        except:
+            featured_count = 0
+        
+        return render(request, 'admin/ratings.html', {
+            'feedbacks': feedbacks,
+            'analytics': analytics,
+            'services': services,
+            'featured_count': featured_count,
+        })
+        
+    except Exception as e:
+        messages.error(request, f"Error loading ratings page: {str(e)}")
+        # Return a simple template instead of redirecting to avoid infinite loops
+        return render(request, 'admin/ratings.html', {
+            'feedbacks': [],
+            'analytics': {
+                'total_feedbacks': 0,
+                'average_ratings': {
+                    'overall': 0,
+                    'quality': 0,
+                    'punctuality': 0,
+                    'staff_behavior': 0,
+                    'value_for_money': 0,
+                },
+                'recommendation_rate': 0,
+                'rating_distribution': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            },
+            'services': [],
+            'featured_count': 0,
+        })
+
+@login_required
+@require_POST
+def admin_respond_feedback(request):
+    """Handle admin response to customer feedback"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('home')
+    
+    try:
+        from .models import Feedback
+        
+        feedback_id = request.POST.get('feedback_id')
+        admin_response = request.POST.get('admin_response', '').strip()
+        
+        if not feedback_id or not admin_response:
+            messages.error(request, "Feedback ID and response are required.")
+            return redirect('admin_ratings')
+        
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        feedback.admin_response = admin_response
+        feedback.save()
+        
+        messages.success(request, "Response added successfully!")
+        return redirect('admin_ratings')
+        
+    except Exception as e:
+        messages.error(request, f"Error adding response: {str(e)}")
+        return redirect('admin_ratings')
+
+@login_required
+@require_POST  
+def admin_toggle_featured(request):
+    """Toggle featured status of feedback"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    
+    try:
+        import json
+        from .models import Feedback
+        
+        data = json.loads(request.body)
+        feedback_id = data.get('feedback_id')
+        is_featured = data.get('is_featured', False)
+        
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        feedback.is_featured = is_featured
+        feedback.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'is_featured': feedback.is_featured
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+# Downloadable Reports Views
+@login_required
+def download_booking_report(request):
+    """Download booking reports in CSV format"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    import csv
+    from django.http import HttpResponse
+    
+    # Get report type and period
+    report_type = request.GET.get('type', 'monthly')  # weekly, monthly, quarterly, annually
+    period = request.GET.get('period', 'current')      # current, last, all
+    
+    # Determine date range
+    now = timezone.now()
+    if report_type == 'weekly':
+        if period == 'current':
+            start_date = now - timedelta(days=now.weekday())
+            end_date = start_date + timedelta(days=6)
+            filename = f'weekly_bookings_{start_date.strftime("%Y%m%d")}.csv'
+        elif period == 'last':
+            start_date = now - timedelta(days=now.weekday() + 7)
+            end_date = start_date + timedelta(days=6)
+            filename = f'weekly_bookings_{start_date.strftime("%Y%m%d")}.csv'
+    elif report_type == 'monthly':
+        if period == 'current':
+            start_date = now.replace(day=1)
+            end_date = (start_date + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            filename = f'monthly_bookings_{start_date.strftime("%Y%m")}.csv'
+        elif period == 'last':
+            start_date = (now.replace(day=1) - timedelta(days=1)).replace(day=1)
+            end_date = now.replace(day=1) - timedelta(days=1)
+            filename = f'monthly_bookings_{start_date.strftime("%Y%m")}.csv'
+    elif report_type == 'quarterly':
+        quarter = (now.month - 1) // 3 + 1
+        if period == 'current':
+            start_date = now.replace(month=(quarter-1)*3+1, day=1)
+            end_date = (start_date + timedelta(days=95)).replace(day=1) - timedelta(days=1)
+            filename = f'quarterly_bookings_Q{quarter}_{now.year}.csv'
+    elif report_type == 'annually':
+        if period == 'current':
+            start_date = now.replace(month=1, day=1)
+            end_date = now.replace(month=12, day=31)
+            filename = f'annual_bookings_{now.year}.csv'
+        elif period == 'last':
+            start_date = now.replace(year=now.year-1, month=1, day=1)
+            end_date = now.replace(year=now.year-1, month=12, day=31)
+            filename = f'annual_bookings_{now.year-1}.csv'
+    else:
+        start_date = None
+        end_date = None
+        filename = 'all_bookings.csv'
+    
+    # Filter bookings
+    bookings = Booking.objects.select_related('customer', 'service', 'assigned_staff')
+    if start_date and end_date:
+        try:
+            # Check if created_at column exists
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='core_booking' AND column_name='created_at')")
+                created_at_exists = cursor.fetchone()[0]
+            
+            if created_at_exists:
+                bookings = bookings.filter(created_at__gte=start_date, created_at__lte=end_date)
+            else:
+                bookings = bookings.filter(date__gte=start_date.date(), date__lte=end_date.date())
+        except:
+            bookings = bookings.filter(date__gte=start_date.date(), date__lte=end_date.date())
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'Booking ID', 'Customer Name', 'Service', 'Date', 'Time', 
+        'Status', 'Address', 'Phone', 'Email', 'Staff Assigned', 
+        'Service Price', 'Created At'
+    ])
+    
+    for booking in bookings:
+        try:
+            staff_name = booking.assigned_staff.get_full_name() if booking.assigned_staff else 'Not Assigned'
+            service_price = booking.service.price if hasattr(booking.service, 'price') else 'N/A'
+            created_at = booking.created_at if hasattr(booking, 'created_at') else 'N/A'
+        except:
+            staff_name = 'Not Assigned'
+            service_price = 'N/A'
+            created_at = 'N/A'
+            
+            writer.writerow([
+                booking.id,
+                booking.customer.name,
+                booking.service.name,
+                booking.date,
+                booking.time,
+                booking.status,
+                booking.customer.address,
+                booking.customer.phone,
+                booking.customer.email,
+                staff_name,
+                service_price,
+                created_at
+            ])
+    
+    return response
+
+@login_required
+def download_service_report(request):
+    """Download service popularity reports in CSV format"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="service_popularity_report.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Service Name', 'Total Bookings', 'Completed Bookings', 'Pending Bookings', 'Total Revenue'])
+    
+    services = Service.objects.annotate(
+        total_bookings=Count('booking'),
+        completed_bookings=Count('booking', filter=Q(booking__status='completed')),
+        pending_bookings=Count('booking', filter=Q(booking__status='pending'))
+    ).order_by('-total_bookings')
+    
+    for service in services:
+        try:
+            revenue = Booking.objects.filter(service=service, status='completed').aggregate(
+                total=Sum('service__price')
+            )['total'] or 0
+        except:
+            revenue = 0
+            
+        writer.writerow([
+            service.name,
+            service.total_bookings,
+            service.completed_bookings,
+            service.pending_bookings,
+            revenue
+        ])
+    
+    return response
+
+@login_required
+def download_location_report(request):
+    """Download location-based booking reports in CSV format"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="location_booking_report.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Customer Name', 'Address', 'Total Bookings', 'Completed Bookings', 'Pending Bookings'])
+    
+    locations = Booking.objects.values('customer__name', 'customer__address').annotate(
+        total_bookings=Count('id'),
+        completed_bookings=Count('id', filter=Q(status='completed')),
+        pending_bookings=Count('id', filter=Q(status='pending'))
+    ).order_by('customer__name')
+    
+    for location in locations:
+        writer.writerow([
+            location['customer__name'] or 'N/A',
+            location['customer__address'] or 'N/A',
+            location['total_bookings'],
+            location['completed_bookings'],
+            location['pending_bookings']
+        ])
+    
+    return response
+
+@login_required
+def download_staff_report(request):
+    """Download staff performance reports in CSV format"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="staff_performance_report.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Staff Name', 'Total Assignments', 'Completed Jobs', 'Pending Jobs', 'Completion Rate'])
+    
+    staff_members = User.objects.filter(is_staff=True).annotate(
+        total_assignments=Count('assigned_bookings'),
+        completed_jobs=Count('assigned_bookings', filter=Q(assigned_bookings__status='completed')),
+        pending_jobs=Count('assigned_bookings', filter=Q(assigned_bookings__status='pending'))
+    )
+    
+    for staff in staff_members:
+        completion_rate = (staff.completed_jobs / staff.total_assignments * 100) if staff.total_assignments > 0 else 0
+            
+        writer.writerow([
+            staff.get_full_name() or staff.username,
+            staff.total_assignments,
+            staff.completed_jobs,
+            staff.pending_jobs,
+            f"{completion_rate:.1f}%"
+        ])
+    
+    return response
+
+@login_required
+def download_revenue_report(request):
+    """Download revenue reports in CSV format"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    import csv
+    from django.http import HttpResponse
+    
+    report_type = request.GET.get('type', 'monthly')
+    period = request.GET.get('period', 'current')
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="revenue_report_{report_type}_{period}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Period', 'Total Bookings', 'Completed Bookings', 'Total Revenue', 'Average Revenue per Booking'])
+    
+    now = timezone.now()
+    
+    if report_type == 'monthly':
+        for month in range(1, 13):
+            try:
+                # Check if created_at column exists
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='core_booking' AND column_name='created_at')")
+                    created_at_exists = cursor.fetchone()[0]
+                
+                if created_at_exists:
+                    bookings = Booking.objects.filter(created_at__year=now.year, created_at__month=month)
+                else:
+                    bookings = Booking.objects.filter(date__year=now.year, date__month=month)
+                    
+                completed = bookings.filter(status='completed')
+                revenue = completed.aggregate(total=Sum('service__price'))['total'] or 0
+                avg_revenue = revenue / completed.count() if completed.count() > 0 else 0
+                
+                writer.writerow([
+                    f"{now.year}-{month:02d}",
+                    bookings.count(),
+                    completed.count(),
+                    revenue,
+                    f"{avg_revenue:.2f}"
+                ])
+            except:
+                writer.writerow([f"{now.year}-{month:02d}", 0, 0, 0, 0])
+    
+    return response
+
+
+@login_required
+def admin_loyal_customers(request):
+    """Admin view for loyal customers - ranked by booking count"""
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    try:
+        # Get customers with their booking counts
+        customers = Customer.objects.annotate(
+            total_bookings=Count('booking'),
+            completed_bookings=Count('booking', filter=Q(booking__status='completed')),
+            pending_bookings=Count('booking', filter=Q(booking__status='pending')),
+            cancelled_bookings=Count('booking', filter=Q(booking__status='cancelled'))
+        ).filter(total_bookings__gt=0).order_by('-total_bookings')
+        
+        # Calculate loyalty levels
+        loyal_customers = []
+        for customer in customers:
+            if customer.total_bookings >= 10:
+                loyalty_level = "Platinum"
+                loyalty_class = "text-warning"
+            elif customer.total_bookings >= 5:
+                loyalty_level = "Gold"
+                loyalty_class = "text-primary"
+            elif customer.total_bookings >= 3:
+                loyalty_level = "Silver"
+                loyalty_class = "text-info"
+            else:
+                loyalty_level = "Bronze"
+                loyalty_class = "text-secondary"
+            
+            # Calculate completion rate
+            completion_rate = (customer.completed_bookings / customer.total_bookings * 100) if customer.total_bookings > 0 else 0
+            
+            loyal_customers.append({
+                'customer': customer,
+                'loyalty_level': loyalty_level,
+                'loyalty_class': loyalty_class,
+                'completion_rate': completion_rate
+            })
+        
+        # Pagination
+        paginator = Paginator(loyal_customers, 20)  # Show 20 customers per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Stats for the dashboard
+        total_customers = Customer.objects.count()
+        active_customers = Customer.objects.filter(booking__isnull=False).distinct().count()
+        platinum_customers = len([c for c in loyal_customers if c['loyalty_level'] == 'Platinum'])
+        gold_customers = len([c for c in loyal_customers if c['loyalty_level'] == 'Gold'])
+        
+        context = {
+            'loyal_customers': page_obj,
+            'total_customers': total_customers,
+            'active_customers': active_customers,
+            'platinum_customers': platinum_customers,
+            'gold_customers': gold_customers,
+        }
+        
+        return render(request, 'admin/loyal_customers.html', context)
+        
+    except Exception as e:
+        print(f"Loyal Customers Error: {str(e)}")
+        messages.error(request, f"Error loading loyal customers: {str(e)}")
+        return render(request, 'admin/loyal_customers.html', {
+            'loyal_customers': [],
+            'total_customers': 0,
+            'active_customers': 0,
+            'platinum_customers': 0,
+            'gold_customers': 0,
+        })

@@ -25,6 +25,39 @@
             transform: scale(1.02);
         }
 
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .navbar-custom .btn {
+                margin-bottom: 0.5rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .navbar-nav {
+                text-align: center;
+                padding: 1rem 0;
+            }
+            
+            .navbar-nav .nav-item {
+                margin: 0.25rem 0;
+            }
+            
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar-brand img {
+                height: 35px !important;
+            }
+            
+            .navbar-custom .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
 
     </style>
     {% block extra_css %}{% endblock %}

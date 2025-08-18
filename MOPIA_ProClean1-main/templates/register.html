@@ -144,6 +144,78 @@
     .modal {
         z-index: 1050;
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .register-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0 15px;
+        }
+        
+        .container {
+            padding: 2rem 15px;
+        }
+        
+        .register-card {
+            margin: 0;
+        }
+        
+        .register-header {
+            padding: 15px;
+        }
+        
+        .register-header h3 {
+            font-size: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 2rem !important;
+        }
+        
+        .row .col-md-6 {
+            margin-bottom: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .register-container {
+            padding: 0 10px;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .register-header {
+            padding: 12px;
+        }
+        
+        .register-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            padding: 12px;
+        }
+        
+        .form-control {
+            padding: 12px;
+        }
+        
+        .row .col-md-6 {
+            margin-bottom: 1rem;
+        }
+        
+        .modal-dialog {
+            margin: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 

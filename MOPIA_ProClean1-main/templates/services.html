@@ -68,6 +68,69 @@
         height: 3px;
         background-color: #8DC448;
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .container {
+            padding: 2rem 15px;
+        }
+        
+        .services-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .services-header h1 {
+            font-size: 2rem;
+        }
+        
+        .service-card {
+            margin-bottom: 2rem;
+        }
+        
+        .service-title {
+            font-size: 1.3rem;
+        }
+        
+        .service-price {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem 10px;
+        }
+        
+        .services-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .service-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .service-title {
+            font-size: 1.2rem;
+        }
+        
+        .service-price {
+            font-size: 1rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+        }
+        
+        .services-header::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
 </style>
 {% endblock %}
 

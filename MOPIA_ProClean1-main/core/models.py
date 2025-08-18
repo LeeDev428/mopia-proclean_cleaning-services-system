@@ -70,8 +70,22 @@ class Booking(models.Model):
     clock_out = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     
+    # User and Admin Notes
+    user_note = models.TextField(blank=True, null=True, help_text="Customer's note for the service (e.g., 'May aso dito')")
+    admin_note = models.TextField(blank=True, null=True, help_text="Admin's note about service requirements (e.g., 'We will use your water supply and electricity')")
+    
+    # Payment fields
+    reference_number = models.CharField(max_length=100, blank=True, null=True, help_text="Payment reference number from GCash, PayMaya, etc.")
+    downpayment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="40% downpayment amount")
+    payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Payment method used (GCash, PayMaya, etc.)")
+    is_downpayment_confirmed = models.BooleanField(default=False, help_text="Whether admin has verified the downpayment")
+    
     def __str__(self):
         return f"{self.customer.name} - {self.service.name} on {self.date} at {self.time}"
+    
+    def get_downpayment_amount(self):
+        """Calculate 40% downpayment of service price"""
+        return self.service.price * 0.4 if self.service else 0
     
     def get_duration(self):
         """Calculate the duration of work in hours"""
@@ -105,3 +119,111 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return self.user.username
+
+class Feedback(models.Model):
+    RATING_CHOICES = [
+        (1, '1 - Very Poor'),
+        (2, '2 - Poor'),
+        (3, '3 - Average'),
+        (4, '4 - Good'),
+        (5, '5 - Excellent'),
+    ]
+    
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='feedback')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='feedbacks')
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='feedbacks')
+    assigned_staff = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_feedbacks')
+    
+    # Rating fields
+    overall_rating = models.IntegerField(choices=RATING_CHOICES, help_text="Overall service rating")
+    quality_rating = models.IntegerField(choices=RATING_CHOICES, help_text="Quality of cleaning")
+    punctuality_rating = models.IntegerField(choices=RATING_CHOICES, help_text="Punctuality and timeliness")
+    staff_behavior_rating = models.IntegerField(choices=RATING_CHOICES, help_text="Staff behavior and professionalism")
+    value_for_money_rating = models.IntegerField(choices=RATING_CHOICES, help_text="Value for money")
+    
+    # Text feedback
+    positive_feedback = models.TextField(blank=True, null=True, help_text="What did you like about our service?")
+    improvement_feedback = models.TextField(blank=True, null=True, help_text="What can we improve?")
+    additional_comments = models.TextField(blank=True, null=True, help_text="Any additional comments")
+    
+    # Recommendation
+    would_recommend = models.BooleanField(help_text="Would you recommend our service to others?")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_featured = models.BooleanField(default=False, help_text="Feature this feedback on website")
+    admin_response = models.TextField(blank=True, null=True, help_text="Admin response to feedback")
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Feedback for {self.service.name} by {self.customer.name} - {self.overall_rating}/5"
+    
+    @property
+    def average_rating(self):
+        """Calculate average rating across all rating categories"""
+        ratings = [
+            self.overall_rating,
+            self.quality_rating,
+            self.punctuality_rating,
+            self.staff_behavior_rating,
+            self.value_for_money_rating
+        ]
+        return round(sum(ratings) / len(ratings), 1)
+    
+    @property
+    def rating_category(self):
+        """Get rating category based on average rating"""
+        avg = self.average_rating
+        if avg >= 4.5:
+            return "Excellent"
+        elif avg >= 4.0:
+            return "Very Good"
+        elif avg >= 3.5:
+            return "Good"
+        elif avg >= 3.0:
+            return "Average"
+        elif avg >= 2.0:
+            return "Poor"
+        else:
+            return "Very Poor"
+    
+    @classmethod
+    def get_service_analytics(cls, service_id=None):
+        """Get analytics for service feedback"""
+        queryset = cls.objects.all()
+        if service_id:
+            queryset = queryset.filter(service_id=service_id)
+        
+        if not queryset.exists():
+            return None
+        
+        total_feedbacks = queryset.count()
+        avg_overall = queryset.aggregate(models.Avg('overall_rating'))['overall_rating__avg']
+        avg_quality = queryset.aggregate(models.Avg('quality_rating'))['quality_rating__avg']
+        avg_punctuality = queryset.aggregate(models.Avg('punctuality_rating'))['punctuality_rating__avg']
+        avg_staff = queryset.aggregate(models.Avg('staff_behavior_rating'))['staff_behavior_rating__avg']
+        avg_value = queryset.aggregate(models.Avg('value_for_money_rating'))['value_for_money_rating__avg']
+        
+        recommendations = queryset.filter(would_recommend=True).count()
+        recommendation_rate = (recommendations / total_feedbacks) * 100 if total_feedbacks > 0 else 0
+        
+        # Rating distribution
+        rating_distribution = {}
+        for i in range(1, 6):
+            rating_distribution[i] = queryset.filter(overall_rating=i).count()
+        
+        return {
+            'total_feedbacks': total_feedbacks,
+            'average_ratings': {
+                'overall': round(avg_overall, 1) if avg_overall else 0,
+                'quality': round(avg_quality, 1) if avg_quality else 0,
+                'punctuality': round(avg_punctuality, 1) if avg_punctuality else 0,
+                'staff_behavior': round(avg_staff, 1) if avg_staff else 0,
+                'value_for_money': round(avg_value, 1) if avg_value else 0,
+            },
+            'recommendation_rate': round(recommendation_rate, 1),
+            'rating_distribution': rating_distribution,
+        }

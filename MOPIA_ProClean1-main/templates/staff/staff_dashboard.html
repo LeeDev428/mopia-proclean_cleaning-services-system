@@ -85,6 +85,158 @@
     tr.qualified-service:hover {
         background-color: rgba(160, 216, 137, 0.2);
     }
+    
+    /* Mobile Responsive Styles for Staff Dashboard */
+    @media (max-width: 992px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1040;
+        }
+        
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        
+        .mobile-menu-toggle {
+            display: block !important;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: #8DC448;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 280px;
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+        }
+        
+        .sidebar-nav .nav-link {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .main-content {
+            padding: 1rem;
+        }
+        
+        .dashboard-card-header {
+            padding: 10px 15px;
+        }
+        
+        .dashboard-card-header h5 {
+            font-size: 1.1rem;
+        }
+        
+        .stats-card {
+            padding: 15px;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-card .number {
+            font-size: 20px;
+        }
+        
+        .table-responsive {
+            border: none;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .modal-dialog {
+            margin: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .sidebar {
+            width: 250px;
+        }
+        
+        .sidebar-header h5 {
+            font-size: 1rem;
+        }
+        
+        .sidebar-nav .nav-link {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .main-content {
+            padding: 0.5rem;
+        }
+        
+        .dashboard-card-header h5 {
+            font-size: 1rem;
+        }
+        
+        .stats-card {
+            padding: 12px;
+        }
+        
+        .stats-card .number {
+            font-size: 18px;
+        }
+        
+        .stats-card .label {
+            font-size: 0.8rem;
+        }
+        
+        .btn-mopia {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .mobile-menu-toggle {
+            top: 15px;
+            left: 15px;
+            padding: 8px;
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+        
+        .clock-status {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+        }
+    }
+    
+    .mobile-menu-toggle {
+        display: none;
+    }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
 {% endblock %}
@@ -92,6 +244,11 @@
 {% block navbar %}{% endblock %}
 
 {% block content %}
+<!-- Mobile menu toggle button -->
+<button class="mobile-menu-toggle" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+</button>
+
 <div class="dashboard-wrapper">
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
@@ -577,7 +734,33 @@
                     
                     <div class="col-md-6">
                         <h6 class="mb-3">Notes</h6>
-                        <p id="booking-notes">No additional notes.</p>
+                        
+                        <!-- Customer Note -->
+                        <div class="mb-3" id="booking-user-note-section" style="display: none;">
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="bi bi-chat-left-text text-primary me-1"></i>Customer Note:
+                                </div>
+                            </div>
+                            <div class="alert alert-info py-2 px-3 mb-2">
+                                <small class="mb-0" id="booking-user-note"></small>
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Service Note -->
+                        <div class="mb-3" id="booking-admin-note-section" style="display: none;">
+                            <div class="detail-row">
+                                <div class="detail-label">
+                                    <i class="bi bi-info-circle text-warning me-1"></i>Service Requirements:
+                                </div>
+                            </div>
+                            <div class="alert alert-warning py-2 px-3 mb-2">
+                                <small class="mb-0" id="booking-admin-note"></small>
+                            </div>
+                        </div>
+                        
+                        <!-- No notes message -->
+                        <p id="booking-no-notes" class="text-muted">No additional notes.</p>
                     </div>
                     <!-- Display Before and After Photos -->
 <div class="row mt-3">
@@ -936,8 +1119,33 @@ function formatPhilippinesTime(timestamp) {
                         formatPhilippinesTime(data.clock_out) : 'Not clocked out yet';
                     document.getElementById('booking-work-duration').textContent = data.work_duration || 'Not completed';
                     
-                    // Notes
-                    document.getElementById('booking-notes').textContent = data.notes || 'No additional notes.';
+                    // Notes - Handle user and admin notes separately
+                    const userNoteSection = document.getElementById('booking-user-note-section');
+                    const adminNoteSection = document.getElementById('booking-admin-note-section');
+                    const noNotesMsg = document.getElementById('booking-no-notes');
+                    
+                    let hasNotes = false;
+                    
+                    // Handle user note
+                    if (data.user_note && data.user_note.trim()) {
+                        document.getElementById('booking-user-note').textContent = data.user_note;
+                        userNoteSection.style.display = 'block';
+                        hasNotes = true;
+                    } else {
+                        userNoteSection.style.display = 'none';
+                    }
+                    
+                    // Handle admin note
+                    if (data.admin_note && data.admin_note.trim()) {
+                        document.getElementById('booking-admin-note').textContent = data.admin_note;
+                        adminNoteSection.style.display = 'block';
+                        hasNotes = true;
+                    } else {
+                        adminNoteSection.style.display = 'none';
+                    }
+                    
+                    // Show "no notes" message if neither note exists
+                    noNotesMsg.style.display = hasNotes ? 'none' : 'block';
                     
                     // Status badges
                     const statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
@@ -1226,6 +1434,32 @@ document.getElementById('upload-after-form').addEventListener('submit', function
             alert('Error uploading after photo.');
         }
     });
+});
+
+// Mobile menu toggle functions
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleButton = document.querySelector('.mobile-menu-toggle');
+    
+    if (window.innerWidth <= 992) {
+        if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+            sidebar.classList.remove('show');
+        }
+    }
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    const sidebar = document.querySelector('.sidebar');
+    if (window.innerWidth > 992) {
+        sidebar.classList.remove('show');
+    }
 });
 </script>
 {% endblock %}
