@@ -43,9 +43,16 @@
                                     <div><strong>Downpayment:</strong> ₱{{ booking.downpayment_amount|default:"0.00" }}</div>
                                     <div class="mt-1">
                                         {% if booking.is_downpayment_confirmed %}
-                                            <span class="badge bg-success">✓ Verified</span>
+                                            <span class="badge bg-success">✓ Downpayment Verified</span>
                                         {% else %}
-                                            <span class="badge bg-warning">⏳ Pending</span>
+                                            <span class="badge bg-warning">⏳ Downpayment Pending</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mt-1">
+                                        {% if booking.is_full_payment_confirmed %}
+                                            <span class="badge bg-primary">💰 Full Payment Confirmed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">⏳ Full Payment Pending</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -98,6 +105,7 @@
                                     data-reference-number="{{ booking.reference_number|default:'' }}"
                                     data-downpayment-amount="{{ booking.downpayment_amount|default:'0.00' }}"
                                     data-downpayment-verified="{{ booking.is_downpayment_confirmed|yesno:'true,false' }}"
+                                    data-full-payment-verified="{{ booking.is_full_payment_confirmed|yesno:'true,false' }}"
                                     data-created-at="{{ booking.created_at|date:'M d, Y g:i A' }}">
                                 <i class="bi bi-info-circle-fill me-1"></i> View Details
                             </button>
@@ -520,15 +528,19 @@
                             <i class="bi bi-credit-card-fill me-2"></i>Payment Information
                         </h6>
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <strong>Method:</strong> <span id="detail-payment-method"></span>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <strong>Ref No.:</strong> <code id="detail-reference-number"></code>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <strong>Downpayment:</strong> ₱<span id="detail-downpayment-amount"></span>
                                 <span id="detail-payment-status" class="badge ms-2"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Full Payment:</strong> 
+                                <span id="detail-full-payment-status" class="badge ms-2"></span>
                             </div>
                         </div>
                     </div>
@@ -733,6 +745,7 @@
                 const referenceNumber = this.getAttribute('data-reference-number');
                 const downpaymentAmount = this.getAttribute('data-downpayment-amount');
                 const downpaymentVerified = this.getAttribute('data-downpayment-verified') === 'true';
+                const fullPaymentVerified = this.getAttribute('data-full-payment-verified') === 'true';
                 const createdAt = this.getAttribute('data-created-at');
                 
                 // Populate modal with booking details
@@ -765,6 +778,16 @@
                 } else {
                     paymentStatusBadge.textContent = '⏳ Pending';
                     paymentStatusBadge.className = 'badge bg-warning ms-2';
+                }
+                
+                // Full payment status
+                const fullPaymentStatusBadge = document.getElementById('detail-full-payment-status');
+                if (fullPaymentVerified) {
+                    fullPaymentStatusBadge.textContent = '✓ Full Payment Confirmed';
+                    fullPaymentStatusBadge.className = 'badge bg-success ms-2';
+                } else {
+                    fullPaymentStatusBadge.textContent = '⏳ Full Payment Pending';
+                    fullPaymentStatusBadge.className = 'badge bg-warning ms-2';
                 }
                 
                 // Handle user note display

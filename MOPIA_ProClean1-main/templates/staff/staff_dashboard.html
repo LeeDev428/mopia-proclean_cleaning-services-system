@@ -456,9 +456,7 @@
                                                     {% csrf_token %}
                                                     <input type="hidden" name="booking_id" value="{{ booking.id }}">
                                                     <input type="hidden" name="status" value="completed">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">
-                                                        <i class="bi bi-check-lg"></i> Complete
-                                                    </button>
+                                                   
                                                 </form>
                                             {% endif %}
                                         </div>
@@ -499,7 +497,7 @@
                                             <i class="bi bi-clock"></i> {{ service.service.duration|default:"2" }} hours
                                         </p>
                                         <p class="card-text text-muted mb-3">
-                                            <i class="bi bi-cash"></i> ${{ service.service.price }}
+                                            <i class="bi bi-cash"></i> ₱{{ service.service.price }}
                                         </p>
                                         <p class="card-text">{{ service.service.description|truncatechars:100 }}</p>
                                         {% if service.notes %}
@@ -781,20 +779,16 @@
                             <h6>Upload Before Photo</h6>
                             <form id="upload-before-form" enctype="multipart/form-data">
                                 {% csrf_token %}
-                                <input type="file" name="before_photo" accept="image/*" required>
-                                <button type="submit" class="btn btn-sm btn-outline-primary mt-2">
-                                    <i class="bi bi-upload"></i> Upload Before
-                                </button>
+                                <input type="hidden" id="before-booking-id" name="booking_id">
+                                <input type="file" name="before_photo" accept="image/*" id="before-photo-input" class="form-control">
                             </form>
                         </div>
                         <div class="col-md-6">
                             <h6>Upload After Photo</h6>
                             <form id="upload-after-form" enctype="multipart/form-data">
                                 {% csrf_token %}
-                                <input type="file" name="after_photo" accept="image/*" required>
-                                <button type="submit" class="btn btn-sm btn-outline-success mt-2">
-                                    <i class="bi bi-upload"></i> Upload After
-                                </button>
+                                <input type="hidden" id="after-booking-id" name="booking_id">
+                                <input type="file" name="after_photo" accept="image/*" id="after-photo-input" class="form-control">
                             </form>
                         </div>
                     </div>
@@ -1109,7 +1103,7 @@ function formatPhilippinesTime(timestamp) {
                     
                     // Service details
                     document.getElementById('booking-duration').textContent = data.duration || '2 hours';
-                    document.getElementById('booking-price').textContent = data.price ? `$${data.price}` : 'Not specified';
+                    document.getElementById('booking-price').textContent = data.price ? `₱${data.price}` : 'Not specified';
                     document.getElementById('booking-staff-count').textContent = data.assigned_staff || 'Unassigned';
                     
                     // Time tracking with Philippines time formatting
@@ -1147,6 +1141,39 @@ function formatPhilippinesTime(timestamp) {
                     // Show "no notes" message if neither note exists
                     noNotesMsg.style.display = hasNotes ? 'none' : 'block';
                     
+                    // Handle photo display
+                    const beforePhotoElement = document.getElementById('before-photo');
+                    const noBeforePhotoElement = document.getElementById('no-before-photo');
+                    const afterPhotoElement = document.getElementById('after-photo');
+                    const noAfterPhotoElement = document.getElementById('no-after-photo');
+                    
+                    // Show before photo if exists
+                    if (data.before_photo) {
+                        beforePhotoElement.src = data.before_photo;
+                        beforePhotoElement.style.display = 'block';
+                        noBeforePhotoElement.style.display = 'none';
+                    } else {
+                        beforePhotoElement.style.display = 'none';
+                        noBeforePhotoElement.style.display = 'block';
+                    }
+                    
+                    // Show after photo if exists
+                    if (data.after_photo) {
+                        afterPhotoElement.src = data.after_photo;
+                        afterPhotoElement.style.display = 'block';
+                        noAfterPhotoElement.style.display = 'none';
+                    } else {
+                        afterPhotoElement.style.display = 'none';
+                        noAfterPhotoElement.style.display = 'block';
+                    }
+                    
+                    // Set booking ID in photo upload forms
+                    document.getElementById('before-booking-id').value = bookingId;
+                    document.getElementById('after-booking-id').value = bookingId;
+                    
+                    // Store booking ID for later use in upload functions
+                    window.currentBookingId = bookingId;
+                    
                     // Status badges
                     const statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
                     
@@ -1175,17 +1202,26 @@ function formatPhilippinesTime(timestamp) {
                             actionButtonsContainer.appendChild(clockOutBtn);
                         }
                         
-                        // Add complete button
-                        const completeButton = document.createElement('form');
-                        completeButton.method = 'post';
-                        completeButton.action = "{% url 'update_booking_status' %}";
-                        completeButton.style.display = 'inline';
-                        completeButton.innerHTML = `
-                            {% csrf_token %}
-                            <input type="hidden" name="booking_id" value="${data.id}">
-                            <input type="hidden" name="status" value="completed">
-                            <button type="submit" class="btn btn-success">Mark as Complete</button>
-                        `;
+                        // Add payment confirmation button if downpayment is confirmed but full payment is not
+                        if (data.is_downpayment_confirmed && !data.is_full_payment_confirmed) {
+                            const paymentBtn = document.createElement('button');
+                            paymentBtn.type = 'button';
+                            paymentBtn.className = 'btn btn-warning me-2';
+                            paymentBtn.innerHTML = '<i class="bi bi-credit-card"></i> Confirm Full Payment';
+                            paymentBtn.onclick = function() {
+                                confirmFullPayment(data.id);
+                            };
+                            actionButtonsContainer.appendChild(paymentBtn);
+                        }
+                        
+                        // Add complete button (now marks as completed AND full paid)
+                        const completeButton = document.createElement('button');
+                        completeButton.type = 'button';
+                        completeButton.className = 'btn btn-success';
+                        completeButton.innerHTML = '<i class="bi bi-check-circle"></i> Mark Complete & Full Paid';
+                        completeButton.onclick = function() {
+                            markCompletedAndFullPaid(data.id);
+                        };
                         actionButtonsContainer.appendChild(completeButton);
                     }
                 })
@@ -1394,47 +1430,48 @@ function formatPhilippinesTime(timestamp) {
             }
         });
     });
-    // Handle Before Photo Upload
-document.getElementById('upload-before-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const bookingId = document.querySelector('#viewBookingModal .view-booking').getAttribute('data-id');
-    fetch(`/staff/upload_photo/before/${bookingId}/`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('before-photo').src = data.photo_url;
-            document.getElementById('before-photo').style.display = 'block';
-            document.getElementById('no-before-photo').style.display = 'none';
-        } else {
-            alert('Error uploading before photo.');
+// Function to mark as completed and full paid with photos
+function markCompletedAndFullPaid(bookingId) {
+    if (confirm('Are you sure you want to mark this booking as completed and full paid? This will upload any selected photos and finalize the booking.')) {
+        const formData = new FormData();
+        
+        // Add photos if selected
+        const beforePhotoInput = document.getElementById('before-photo-input');
+        const afterPhotoInput = document.getElementById('after-photo-input');
+        
+        if (beforePhotoInput.files[0]) {
+            formData.append('before_photo', beforePhotoInput.files[0]);
+            console.log('Adding before photo:', beforePhotoInput.files[0].name);
         }
-    });
-});
-
-// Handle After Photo Upload
-document.getElementById('upload-after-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const bookingId = document.querySelector('#viewBookingModal .view-booking').getAttribute('data-id');
-    fetch(`/staff/upload_photo/after/${bookingId}/`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('after-photo').src = data.photo_url;
-            document.getElementById('after-photo').style.display = 'block';
-            document.getElementById('no-after-photo').style.display = 'none';
-        } else {
-            alert('Error uploading after photo.');
+        
+        if (afterPhotoInput.files[0]) {
+            formData.append('after_photo', afterPhotoInput.files[0]);
+            console.log('Adding after photo:', afterPhotoInput.files[0].name);
         }
-    });
-});
+        
+        // Add CSRF token
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/staff/mark-completed-full-paid/${bookingId}/`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Mark completed response:', data);
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // Refresh to update the display
+            } else {
+                alert('Error updating booking: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating booking.');
+        });
+    }
+}
 
 // Mobile menu toggle functions
 function toggleSidebar() {

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db.utils import OperationalError, ProgrammingError, IntegrityError
 from django.db import connection  # Add this import for database connection
-from django.db.models import Count, Sum, Q, Avg  # Add analytics imports
+from django.db.models import Count, Sum, Q, Avg, F  # Add analytics imports and F
 from .models import Service, Customer, Booking, UserProfile, Notification
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth.models import User  # Add this import at the top with other imports
@@ -1741,6 +1741,15 @@ def booking_detail(request, booking_id):
             'user_note': booking.user_note,
             'admin_note': booking.admin_note,
             'qualified_staff': qualified_staff_names,
+            # Payment information
+            'payment_method': booking.payment_method,
+            'reference_number': booking.reference_number,
+            'downpayment_amount': str(booking.downpayment_amount) if booking.downpayment_amount else None,
+            'is_downpayment_confirmed': booking.is_downpayment_confirmed,
+            'is_full_payment_confirmed': booking.is_full_payment_confirmed,
+            # Photo information
+            'before_photo': booking.before_photo.url if booking.before_photo and booking.before_photo.name else None,
+            'after_photo': booking.after_photo.url if booking.after_photo and booking.after_photo.name else None,
         }
         
         return JsonResponse(response)
@@ -2608,3 +2617,406 @@ def admin_loyal_customers(request):
             'platinum_customers': 0,
             'gold_customers': 0,
         })
+
+@login_required
+def upload_before_photo(request, booking_id):
+    """Upload before photo for a booking"""
+    print(f"Upload before photo called for booking {booking_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request FILES: {request.FILES}")
+    print(f"Request user: {request.user}")
+    
+    if request.method == 'POST':
+        try:
+            booking = get_object_or_404(Booking, id=booking_id, assigned_staff=request.user)
+            print(f"Found booking: {booking}")
+            
+            if 'before_photo' in request.FILES:
+                photo = request.FILES['before_photo']
+                print(f"Photo received: {photo.name}, size: {photo.size}")
+                
+                booking.before_photo = photo
+                booking.save()
+                print(f"Photo saved successfully. URL: {booking.before_photo.url if booking.before_photo else 'None'}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Before photo uploaded successfully!',
+                    'photo_url': booking.before_photo.url if booking.before_photo else None
+                })
+            else:
+                print("No before_photo in request.FILES")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No photo file provided'
+                })
+                
+        except Exception as e:
+            print(f"Exception in upload_before_photo: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Error uploading photo: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def upload_after_photo(request, booking_id):
+    """Upload after photo for a booking"""
+    print(f"Upload after photo called for booking {booking_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request FILES: {request.FILES}")
+    print(f"Request user: {request.user}")
+    
+    if request.method == 'POST':
+        try:
+            booking = get_object_or_404(Booking, id=booking_id, assigned_staff=request.user)
+            print(f"Found booking: {booking}")
+            
+            if 'after_photo' in request.FILES:
+                photo = request.FILES['after_photo']
+                print(f"Photo received: {photo.name}, size: {photo.size}")
+                
+                booking.after_photo = photo
+                booking.save()
+                print(f"Photo saved successfully. URL: {booking.after_photo.url if booking.after_photo else 'None'}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'After photo uploaded successfully!',
+                    'photo_url': booking.after_photo.url if booking.after_photo else None
+                })
+            else:
+                print("No after_photo in request.FILES")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No photo file provided'
+                })
+                
+        except Exception as e:
+            print(f"Exception in upload_after_photo: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Error uploading photo: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def confirm_full_payment(request, booking_id):
+    """Confirm that full payment has been received"""
+    if request.method == 'POST':
+        try:
+            booking = get_object_or_404(Booking, id=booking_id, assigned_staff=request.user)
+            
+            # Mark full payment as confirmed
+            booking.is_full_payment_confirmed = True
+            booking.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Full payment confirmed successfully!'
+            })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error confirming payment: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def mark_completed_and_full_paid(request, booking_id):
+    """Mark booking as completed and full paid, with optional photo uploads"""
+    if request.method == 'POST':
+        try:
+            booking = get_object_or_404(Booking, id=booking_id, assigned_staff=request.user)
+            
+            # Handle photo uploads if provided
+            if 'before_photo' in request.FILES:
+                booking.before_photo = request.FILES['before_photo']
+                print(f"Before photo uploaded: {request.FILES['before_photo'].name}")
+            
+            if 'after_photo' in request.FILES:
+                booking.after_photo = request.FILES['after_photo']
+                print(f"After photo uploaded: {request.FILES['after_photo'].name}")
+            
+            # Mark as completed and full paid
+            booking.status = 'completed'
+            booking.is_full_payment_confirmed = True
+            
+            # Set clock out time if not already set
+            if not booking.clock_out:
+                booking.clock_out = timezone.now()
+            
+            booking.save()
+            
+            message = 'Booking marked as completed and full paid!'
+            if 'before_photo' in request.FILES or 'after_photo' in request.FILES:
+                message += ' Photos have been uploaded successfully.'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message
+            })
+                
+        except Exception as e:
+            print(f"Error in mark_completed_and_full_paid: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Error updating booking: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def admin_inventory(request):
+    """Admin inventory management view"""
+    # Check if user is admin
+    if not (hasattr(request.user, 'profile') and request.user.profile.is_admin):
+        return redirect('user_dashboard')
+    
+    from .models import InventoryItem, InventoryCategory, InventoryTransaction
+    from django.http import JsonResponse
+    import uuid
+    
+    if request.method == 'POST':
+        try:
+            action = request.POST.get('action', 'add')
+            
+            if action == 'edit':
+                # Edit existing item
+                item_id = request.POST.get('item_id')
+                item = InventoryItem.objects.get(id=item_id)
+                
+                # Get the new category
+                new_category_id = request.POST.get('category')
+                new_category = InventoryCategory.objects.get(id=new_category_id)
+                
+                item.name = request.POST.get('name')
+                item.category = new_category
+                item.unit = request.POST.get('unit')
+                item.minimum_stock = int(request.POST.get('minimum_stock', 0))
+                item.unit_cost = float(request.POST.get('unit_price', 0))
+                item.description = request.POST.get('description', '')
+                
+                # Update is_disposable based on category
+                item.is_disposable = new_category.name == 'cleaning_agents'
+                
+                item.save()
+                
+                return JsonResponse({'success': True, 'message': 'Item updated successfully'})
+                
+            elif action == 'adjust_stock':
+                # Adjust stock
+                item_id = request.POST.get('item_id')
+                item = InventoryItem.objects.get(id=item_id)
+                adjustment_type = request.POST.get('adjustment_type')
+                quantity = int(request.POST.get('quantity', 0))
+                reason = request.POST.get('reason', '')
+                
+                # Calculate new stock based on adjustment type
+                if adjustment_type == 'stock_in':
+                    item.current_stock += quantity
+                elif adjustment_type == 'stock_out':
+                    if item.current_stock >= quantity:
+                        item.current_stock -= quantity
+                    else:
+                        return JsonResponse({'success': False, 'error': 'Insufficient stock'})
+                elif adjustment_type == 'adjustment':
+                    item.current_stock = quantity
+                
+                item.save()
+                
+                # Create transaction record
+                InventoryTransaction.objects.create(
+                    item=item,
+                    transaction_type=adjustment_type,
+                    quantity=quantity if adjustment_type != 'adjustment' else abs(quantity - (item.current_stock - quantity)),
+                    unit_price=item.unit_cost,
+                    notes=reason,
+                    created_by=request.user
+                )
+                
+                return JsonResponse({'success': True, 'message': 'Stock adjusted successfully'})
+            
+            else:
+                # Add new item (existing code)
+                # Get form data
+                name = request.POST.get('name')
+                category_id = request.POST.get('category')
+                unit = request.POST.get('unit')
+                current_stock = int(request.POST.get('current_stock', 0))
+                minimum_stock = int(request.POST.get('minimum_stock', 0))
+                unit_cost = float(request.POST.get('unit_price', 0))
+                description = request.POST.get('description', '')
+                
+                # Validate required fields
+                if not all([name, category_id, unit]):
+                    return JsonResponse({'success': False, 'error': 'Missing required fields'})
+                
+                # Get category
+                try:
+                    category = InventoryCategory.objects.get(id=category_id)
+                except InventoryCategory.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Invalid category'})
+                
+                # Determine if item is disposable based on category
+                is_disposable = category.name == 'cleaning_agents'
+                
+                # Create new inventory item
+                item = InventoryItem.objects.create(
+                    name=name,
+                    category=category,
+                    unit=unit,
+                    current_stock=current_stock,
+                    minimum_stock=minimum_stock,
+                    unit_cost=unit_cost,
+                    description=description,
+                    is_disposable=is_disposable
+                )
+                
+                # Create initial stock transaction if stock > 0
+                if current_stock > 0:
+                    InventoryTransaction.objects.create(
+                        item=item,
+                        transaction_type='stock_in',
+                        quantity=current_stock,
+                        unit_price=unit_cost,
+                        notes=f'Initial stock for {name}',
+                        created_by=request.user
+                    )
+                
+                return JsonResponse({'success': True, 'message': 'Item added successfully'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    # GET request - display inventory
+    # Get all inventory items with their categories
+    inventory_items = InventoryItem.objects.select_related('category').order_by('category__name', 'name')
+    categories = InventoryCategory.objects.all()
+    
+    # Get low stock items count
+    low_stock_items = inventory_items.filter(current_stock__lte=F('minimum_stock')).count()
+    
+    # Calculate total inventory value
+    total_value = sum(item.stock_value for item in inventory_items)
+    total_items = inventory_items.count()
+    
+    # Get recent transactions
+    recent_transactions = InventoryTransaction.objects.select_related(
+        'item', 'created_by'
+    ).order_by('-created_at')[:20]
+    
+    context = {
+        'inventory_items': inventory_items,
+        'total_items': total_items,
+        'categories': categories,
+        'low_stock_items': low_stock_items,
+        'total_value': total_value,
+        'recent_transactions': recent_transactions,
+    }
+    
+    return render(request, 'admin/inventory.html', context)
+
+
+@login_required
+def admin_inventory_get_item(request, item_id):
+    """Get inventory item details for editing"""
+    if not (hasattr(request.user, 'profile') and request.user.profile.is_admin):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'})
+    
+    try:
+        from .models import InventoryItem
+        item = InventoryItem.objects.select_related('category').get(id=item_id)
+        
+        item_data = {
+            'id': item.id,
+            'name': item.name,
+            'category_id': item.category.id,
+            'unit': item.unit,
+            'current_stock': item.current_stock,
+            'minimum_stock': item.minimum_stock,
+            'unit_cost': float(item.unit_cost),
+            'description': item.description,
+        }
+        
+        return JsonResponse({'success': True, 'item': item_data})
+        
+    except InventoryItem.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Item not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def admin_inventory_transactions(request, item_id):
+    """Get transaction history for an inventory item"""
+    if not (hasattr(request.user, 'profile') and request.user.profile.is_admin):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'})
+    
+    try:
+        from .models import InventoryItem, InventoryTransaction
+        item = InventoryItem.objects.get(id=item_id)
+        
+        transactions = InventoryTransaction.objects.filter(
+            item=item
+        ).select_related('created_by').order_by('-created_at')
+        
+        transaction_data = []
+        for transaction in transactions:
+            transaction_data.append({
+                'created_at': transaction.created_at.isoformat(),
+                'transaction_type': transaction.transaction_type,
+                'quantity': transaction.quantity,
+                'unit_price': float(transaction.unit_price),
+                'notes': transaction.notes,
+                'created_by': transaction.created_by.get_full_name() if transaction.created_by else 'System'
+            })
+        
+        return JsonResponse({
+            'success': True, 
+            'item_name': item.name,
+            'transactions': transaction_data
+        })
+        
+    except InventoryItem.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Item not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def admin_logistics(request):
+    """Admin logistics management view"""
+    # Check if user is admin
+    if not (hasattr(request.user, 'profile') and request.user.profile.is_admin):
+        return redirect('user_dashboard')
+    
+    from .models import BookingInventory, InventoryItem
+    
+    # Get confirmed bookings
+    confirmed_bookings = Booking.objects.filter(status='confirmed').select_related(
+        'customer', 'service'
+    ).order_by('date', 'time')
+    
+    # Get bookings with inventory allocated
+    bookings_with_inventory = Booking.objects.filter(
+        inventory_usage__isnull=False
+    ).distinct().select_related('customer', 'service').order_by('-date')
+    
+    # Get available inventory items
+    available_items = InventoryItem.objects.filter(
+        current_stock__gt=0
+    ).select_related('category').order_by('category__name', 'name')
+    
+    context = {
+        'confirmed_bookings': confirmed_bookings,
+        'bookings_with_inventory': bookings_with_inventory,
+        'available_items': available_items,
+    }
+    
+    return render(request, 'admin/logistics.html', context)

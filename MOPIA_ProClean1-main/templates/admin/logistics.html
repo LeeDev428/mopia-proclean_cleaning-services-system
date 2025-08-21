@@ -1,0 +1,258 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Logistics Management - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'admin/admin_panel.html' %}
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-truck me-2"></i>Logistics Management
+                    </h1>
+                    <p class="text-muted mb-0">Manage inventory allocation and booking logistics</p>
+                </div>
+            </div>
+
+            <!-- Logistics Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Active Bookings
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_bookings.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-calendar-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Allocated Items
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ allocated_items.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-box-arrow-right fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Pending Returns
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_returns.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-arrow-clockwise fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Transactions
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ transactions.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Allocations Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Current Inventory Allocations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="allocationsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Item</th>
+                                    <th>Allocated Qty</th>
+                                    <th>Status</th>
+                                    <th>Allocation Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for allocation in allocated_items %}
+                                <tr>
+                                    <td class="fw-bold">#{{ allocation.booking.id }}</td>
+                                    <td>{{ allocation.booking.customer_name }}</td>
+                                    <td>{{ allocation.booking.service.name }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary me-1">{{ allocation.item.category.get_name_display }}</span>
+                                        {{ allocation.item.name }}
+                                    </td>
+                                    <td>{{ allocation.quantity_allocated }} {{ allocation.item.unit }}</td>
+                                    <td>
+                                        {% if allocation.is_returned %}
+                                            <span class="badge bg-success">Returned</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Allocated</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ allocation.allocated_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if not allocation.is_returned %}
+                                            <button class="btn btn-sm btn-success" onclick="markReturned({{ allocation.id }})">
+                                                <i class="bi bi-check-circle me-1"></i>Mark Returned
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">No inventory allocations found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Inventory Transactions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="transactionsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Item</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Booking</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary me-1">{{ transaction.item.category.get_name_display }}</span>
+                                        {{ transaction.item.name }}
+                                    </td>
+                                    <td>
+                                        {% if transaction.transaction_type == 'allocation' %}
+                                            <span class="badge bg-warning">Allocation</span>
+                                        {% elif transaction.transaction_type == 'return' %}
+                                            <span class="badge bg-success">Return</span>
+                                        {% elif transaction.transaction_type == 'usage' %}
+                                            <span class="badge bg-danger">Usage</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ transaction.get_transaction_type_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.quantity }} {{ transaction.item.unit }}</td>
+                                    <td>
+                                        {% if transaction.booking %}
+                                            <a href="#" class="text-decoration-none">#{{ transaction.booking.id }}</a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.notes|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No transactions found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df!important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a!important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e!important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc!important;
+}
+.text-xs {
+    font-size: 0.7rem;
+}
+</style>
+
+<script>
+function markReturned(allocationId) {
+    if (confirm('Mark this item as returned?')) {
+        // AJAX call to mark item as returned
+        fetch(`/admin/mark-returned/${allocationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error marking item as returned');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

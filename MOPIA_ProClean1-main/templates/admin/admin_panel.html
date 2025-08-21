@@ -5,47 +5,47 @@
     </div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
+            
+               <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                  <li class="nav-item">
                 <a class="nav-link" href="{% url 'admin_assign_service' %}">
                     <i class="bi bi-person-check"></i> Assign Services
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'admin_bookings' %}active{% endif %}" href="{% url 'admin_bookings' %}">
-                    <i class="bi bi-calendar-check"></i> Bookings
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_bookings' %}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_services' %}">
+                        <i class="bi bi-tools"></i> Services
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_customers' %}">
+                        <i class="bi bi-people"></i> Customers
+                    </a>
+             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_logistics' %}active{% endif %}" href="{% url 'admin_logistics' %}">
+                    <i class="bi bi-truck"></i> Logistics
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'admin_services' %}active{% endif %}" href="{% url 'admin_services' %}">
-                    <i class="bi bi-tools"></i> Services
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'admin_customers' %}active{% endif %}" href="{% url 'admin_customers' %}">
-                    <i class="bi bi-people"></i> Customers
-                </a>
-            </li>
-                                              <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-person-check"></i> Logistics
-                </a>
-            </li>
-              <li class="nav-item">
+                <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'admin_loyal_customers' %}active{% endif %}" href="{% url 'admin_loyal_customers' %}">
                     <i class="bi bi-star"></i> Loyal Customers
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-person-check"></i> Inventory
+                              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_inventory' %}active{% endif %}" href="{% url 'admin_inventory' %}">
+                    <i class="bi bi-box-seam"></i> Inventory
                 </a>
             </li>
-                           <li class="nav-item">
+                              <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'admin_staff' %}active{% endif %}" href="{% url 'admin_staff' %}">
                     <i class="bi bi-people"></i> Staff
                 </a>
@@ -55,17 +55,18 @@
                     <i class="bi bi-star"></i> Ratings & Feedback
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'admin_settings' %}active{% endif %}" href="{% url 'admin_settings' %}">
-                    <i class="bi bi-gear"></i> Settings
-                </a>
-            </li>
- 
-            <li class="nav-item mt-5">
-                <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
-            </li>
+           
+          
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_settings' %}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li class="nav-item mt-5">
+                    <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
         </ul>
     </div>
 </nav>

@@ -217,7 +217,7 @@
                                     <option value="">-- Select Service --</option>
                                     {% for service in services %}
                                         <option value="{{ service.id }}">
-                                            {{ service.name }} - ${{ service.price }}
+                                            {{ service.name }} - ₱{{ service.price }}
                                         </option>
                                     {% endfor %}
                                 </select>

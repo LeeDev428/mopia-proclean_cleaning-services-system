@@ -401,9 +401,9 @@
                         <i class="bi bi-people"></i> Customers
                     </a>
                 </li>
-                                  <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-person-check"></i> Logistics
+                  <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_logistics' %}active{% endif %}" href="{% url 'admin_logistics' %}">
+                    <i class="bi bi-truck"></i> Logistics
                 </a>
             </li>
                 <li class="nav-item">
@@ -411,9 +411,9 @@
                     <i class="bi bi-star"></i> Loyal Customers
                 </a>
             </li>
-                              <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-person-check"></i> Inventory
+                                  <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_inventory' %}active{% endif %}" href="{% url 'admin_inventory' %}">
+                    <i class="bi bi-box-seam"></i> Inventory
                 </a>
             </li>
                               <li class="nav-item">
@@ -426,6 +426,8 @@
                     <i class="bi bi-star"></i> Ratings & Feedback
                 </a>
             </li>
+            
+          
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'admin_settings' %}">
                         <i class="bi bi-gear"></i> Settings

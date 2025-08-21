@@ -79,6 +79,11 @@ class Booking(models.Model):
     downpayment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="40% downpayment amount")
     payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Payment method used (GCash, PayMaya, etc.)")
     is_downpayment_confirmed = models.BooleanField(default=False, help_text="Whether admin has verified the downpayment")
+    is_full_payment_confirmed = models.BooleanField(default=False, help_text="Whether full payment has been confirmed by staff")
+    
+    # Photo fields for before and after service
+    before_photo = models.ImageField(upload_to='photos/before/', blank=True, null=True, help_text="Photo taken before service starts")
+    after_photo = models.ImageField(upload_to='photos/after/', blank=True, null=True, help_text="Photo taken after service completion")
     
     def __str__(self):
         return f"{self.customer.name} - {self.service.name} on {self.date} at {self.time}"
@@ -227,3 +232,110 @@ class Feedback(models.Model):
             'recommendation_rate': round(recommendation_rate, 1),
             'rating_distribution': rating_distribution,
         }
+
+
+# Inventory Management Models
+class InventoryCategory(models.Model):
+    CATEGORY_CHOICES = [
+        ('cleaning_agents', 'Cleaning Agents'),
+        ('tools', 'Tools'),
+        ('equipment', 'Equipment'),
+    ]
+    
+    name = models.CharField(max_length=50, choices=CATEGORY_CHOICES, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name_plural = "Inventory Categories"
+    
+    def __str__(self):
+        return self.get_name_display()
+
+
+class InventoryItem(models.Model):
+    category = models.ForeignKey(InventoryCategory, on_delete=models.CASCADE, related_name='items')
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    unit = models.CharField(max_length=20, help_text="e.g., pieces, liters, kg")
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    minimum_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_disposable = models.BooleanField(default=False, help_text="True for cleaning agents, False for tools/equipment")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('category', 'name')
+    
+    def __str__(self):
+        return f"{self.name} ({self.category.get_name_display()})"
+    
+    @property
+    def is_low_stock(self):
+        return self.current_stock <= self.minimum_stock
+    
+    @property
+    def stock_value(self):
+        return self.current_stock * self.unit_cost
+
+
+class BookingInventory(models.Model):
+    """Items allocated/used for a specific booking"""
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='inventory_usage')
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
+    quantity_allocated = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    quantity_returned = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_returned = models.BooleanField(default=False, help_text="For non-disposable items only")
+    notes = models.TextField(blank=True, null=True)
+    allocated_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(blank=True, null=True)
+    returned_at = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Booking #{self.booking.id} - {self.item.name} ({self.quantity_allocated} {self.item.unit})"
+    
+    @property
+    def quantity_lost_or_damaged(self):
+        """Calculate items that were not returned (for non-disposables)"""
+        if self.item.is_disposable:
+            return 0
+        return self.quantity_allocated - self.quantity_returned
+    
+    def save(self, *args, **kwargs):
+        # Auto-update inventory stock when items are used
+        if self.pk:  # If updating existing record
+            old_record = BookingInventory.objects.get(pk=self.pk)
+            stock_change = old_record.quantity_used - self.quantity_used
+        else:  # If creating new record
+            stock_change = -self.quantity_used
+        
+        # Update inventory stock
+        if stock_change != 0:
+            self.item.current_stock += stock_change
+            self.item.save()
+        
+        super().save(*args, **kwargs)
+
+
+class InventoryTransaction(models.Model):
+    """Track all inventory movements (stock in, stock out, adjustments)"""
+    TRANSACTION_TYPES = [
+        ('stock_in', 'Stock In'),
+        ('stock_out', 'Stock Out'),
+        ('adjustment', 'Stock Adjustment'),
+        ('booking_use', 'Used in Booking'),
+        ('booking_return', 'Returned from Booking'),
+    ]
+    
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.get_transaction_type_display()} - {self.item.name} ({self.quantity} {self.item.unit})"

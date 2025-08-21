@@ -48,6 +48,10 @@ urlpatterns = [
     path('staff/dashboard/', views.staff_dashboard, name='staff_dashboard'),
     path('staff/clock-in/<int:booking_id>/', views.staff_clock_in, name='staff_clock_in'),
     path('staff/clock-out/<int:booking_id>/', views.staff_clock_out, name='staff_clock_out'),
+    path('staff/upload-before-photo/<int:booking_id>/', views.upload_before_photo, name='upload_before_photo'),
+    path('staff/upload-after-photo/<int:booking_id>/', views.upload_after_photo, name='upload_after_photo'),
+    path('staff/confirm-full-payment/<int:booking_id>/', views.confirm_full_payment, name='confirm_full_payment'),
+    path('staff/mark-completed-full-paid/<int:booking_id>/', views.mark_completed_and_full_paid, name='mark_completed_and_full_paid'),
 
     # Admin service assignment URLs
     path('admin-assign-service/', views.admin_assign_service, name='admin_assign_service'),
@@ -80,5 +84,11 @@ urlpatterns = [
     path('admin-reports/locations/', views.download_location_report, name='download_location_report'),
     path('admin-reports/staff/', views.download_staff_report, name='download_staff_report'),
     path('admin-reports/revenue/', views.download_revenue_report, name='download_revenue_report'),
+    
+    # Inventory and Logistics URLs
+    path('admin-inventory/', views.admin_inventory, name='admin_inventory'),
+    path('admin-inventory/get-item/<int:item_id>/', views.admin_inventory_get_item, name='admin_inventory_get_item'),
+    path('admin-inventory/transactions/<int:item_id>/', views.admin_inventory_transactions, name='admin_inventory_transactions'),
+    path('admin-logistics/', views.admin_logistics, name='admin_logistics'),
     
 ]

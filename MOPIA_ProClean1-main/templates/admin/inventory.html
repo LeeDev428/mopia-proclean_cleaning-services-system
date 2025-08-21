@@ -1,0 +1,691 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Inventory Management - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'admin/admin_panel.html' %}
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-box-seam me-2"></i>Inventory Management
+                    </h1>
+                    <p class="text-muted mb-0">Manage cleaning supplies, tools, and equipment inventory</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                    <button class="btn btn-success" onclick="exportInventory()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Items
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_items }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-boxes fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total Value
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">₱{{ total_value|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Low Stock Items
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ low_stock_items }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Categories
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ categories.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-tags fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-funnel me-2"></i>Filter & Search
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="categoryFilter" class="form-label">Filter by Category</label>
+                            <select class="form-select" id="categoryFilter" onchange="filterInventory()">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.get_name_display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="stockFilter" class="form-label">Stock Status</label>
+                            <select class="form-select" id="stockFilter" onchange="filterInventory()">
+                                <option value="">All Items</option>
+                                <option value="low">Low Stock</option>
+                                <option value="normal">Normal Stock</option>
+                                <option value="out">Out of Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchInput" class="form-label">Search Items</label>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search by name or ID..." onkeyup="filterInventory()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-box-seam me-2"></i>Inventory Items
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="inventoryTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Min Stock</th>
+                            <th>Unit Cost</th>
+                            <th>Total Value</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory_items %}
+                        <tr data-category="{{ item.category.id }}" data-stock-status="{% if item.current_stock == 0 %}out{% elif item.current_stock <= item.minimum_stock %}low{% else %}normal{% endif %}">
+                            <td><code>{{ item.id }}</code></td>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                {% if item.description %}
+                                <br><small class="text-muted">{{ item.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ item.category.get_name_display }}</span>
+                                {% if item.is_disposable %}
+                                <br><small class="text-warning"><i class="bi bi-recycle"></i> Disposable</small>
+                                {% else %}
+                                <br><small class="text-info"><i class="bi bi-arrow-repeat"></i> Returnable</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold {% if item.current_stock == 0 %}text-danger{% elif item.current_stock <= item.minimum_stock %}text-warning{% else %}text-success{% endif %}">
+                                    {{ item.current_stock }} {{ item.unit }}
+                                </span>
+                            </td>
+                            <td>{{ item.minimum_stock }} {{ item.unit }}</td>
+                            <td>₱{{ item.unit_cost|floatformat:2 }}</td>
+                            <td>₱{{ item.stock_value|floatformat:2 }}</td>
+                            <td>
+                                {% if item.current_stock == 0 %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                {% elif item.current_stock <= item.minimum_stock %}
+                                    <span class="badge bg-warning">Low Stock</span>
+                                {% else %}
+                                    <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editItem({{ item.id }})" title="Edit Item">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm" onclick="viewTransactions({{ item.id }})" title="View History">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" onclick="adjustStock({{ item.id }})" title="Adjust Stock">
+                                        <i class="bi bi-plus-minus"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>No inventory items found. <a href="#" data-bs-toggle="modal" data-bs-target="#addItemModal">Add your first item</a></p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Inventory Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addItemForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemName" class="form-label">Item Name *</label>
+                                <input type="text" class="form-control" id="itemName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemCategory" class="form-label">Category *</label>
+                                <select class="form-select" id="itemCategory" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.get_name_display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemUnit" class="form-label">Unit *</label>
+                                <select class="form-select" id="itemUnit" name="unit" required>
+                                    <option value="pcs">Pieces</option>
+                                    <option value="liters">Liters</option>
+                                    <option value="kg">Kilograms</option>
+                                    <option value="bottles">Bottles</option>
+                                    <option value="boxes">Boxes</option>
+                                    <option value="sets">Sets</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="itemStock" class="form-label">Initial Stock *</label>
+                                <input type="number" class="form-control" id="itemStock" name="current_stock" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="itemMinStock" class="form-label">Minimum Stock *</label>
+                                <input type="number" class="form-control" id="itemMinStock" name="minimum_stock" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="itemPrice" class="form-label">Unit Cost (₱) *</label>
+                                <input type="number" class="form-control" id="itemPrice" name="unit_price" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="itemDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="itemDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="editItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Inventory Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editItemForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="editItemId" name="item_id">
+                <input type="hidden" name="action" value="edit">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editItemName" class="form-label">Item Name *</label>
+                                <input type="text" class="form-control" id="editItemName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editItemCategory" class="form-label">Category *</label>
+                                <select class="form-select" id="editItemCategory" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.get_name_display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editItemUnit" class="form-label">Unit *</label>
+                                <select class="form-select" id="editItemUnit" name="unit" required>
+                                    <option value="pcs">Pieces</option>
+                                    <option value="liters">Liters</option>
+                                    <option value="kg">Kilograms</option>
+                                    <option value="bottles">Bottles</option>
+                                    <option value="boxes">Boxes</option>
+                                    <option value="sets">Sets</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editItemMinStock" class="form-label">Minimum Stock *</label>
+                                <input type="number" class="form-control" id="editItemMinStock" name="minimum_stock" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editItemPrice" class="form-label">Unit Cost (₱) *</label>
+                                <input type="number" class="form-control" id="editItemPrice" name="unit_price" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editItemDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editItemDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="stockAdjustModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adjust Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="stockAdjustForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="adjustItemId" name="item_id">
+                <input type="hidden" name="action" value="adjust_stock">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Item:</label>
+                        <p class="fw-bold" id="adjustItemName"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Stock:</label>
+                        <p class="fw-bold text-primary" id="adjustCurrentStock"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustmentType" class="form-label">Adjustment Type *</label>
+                        <select class="form-select" id="adjustmentType" name="adjustment_type" required>
+                            <option value="">Select Type</option>
+                            <option value="stock_in">Stock In (Add)</option>
+                            <option value="stock_out">Stock Out (Remove)</option>
+                            <option value="adjustment">Manual Adjustment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustQuantity" class="form-label">Quantity *</label>
+                        <input type="number" class="form-control" id="adjustQuantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustReason" class="form-label">Reason *</label>
+                        <textarea class="form-control" id="adjustReason" name="reason" rows="3" required placeholder="Enter reason for stock adjustment..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Adjust Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction History Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 id="transactionItemName" class="text-primary"></h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total</th>
+                                <th>Notes</th>
+                                <th>Created By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            <!-- Transactions will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterInventory() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const stockFilter = document.getElementById('stockFilter').value;
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const table = document.getElementById('inventoryTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const category = row.getAttribute('data-category');
+        const stockStatus = row.getAttribute('data-stock-status');
+        const text = row.textContent.toLowerCase();
+
+        let showRow = true;
+
+        // Category filter
+        if (categoryFilter && category !== categoryFilter) {
+            showRow = false;
+        }
+
+        // Stock filter
+        if (stockFilter && stockStatus !== stockFilter) {
+            showRow = false;
+        }
+
+        // Search filter
+        if (searchInput && !text.includes(searchInput)) {
+            showRow = false;
+        }
+
+        row.style.display = showRow ? '' : 'none';
+    }
+}
+
+function editItem(itemId) {
+    // Fetch item details and populate edit modal
+    fetch(`/admin-inventory/get-item/${itemId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const item = data.item;
+                document.getElementById('editItemId').value = item.id;
+                document.getElementById('editItemName').value = item.name;
+                document.getElementById('editItemCategory').value = item.category_id;
+                document.getElementById('editItemUnit').value = item.unit;
+                document.getElementById('editItemMinStock').value = item.minimum_stock;
+                document.getElementById('editItemPrice').value = item.unit_cost;
+                document.getElementById('editItemDescription').value = item.description || '';
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('editItemModal')).show();
+            } else {
+                alert('Error loading item details: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load item details');
+        });
+}
+
+function viewTransactions(itemId) {
+    // Fetch transaction history and show in modal
+    fetch(`/admin-inventory/transactions/${itemId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('transactionItemName').textContent = 
+                    `Transaction History for: ${data.item_name}`;
+                
+                const tbody = document.getElementById('transactionTableBody');
+                tbody.innerHTML = '';
+                
+                if (data.transactions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No transactions found</td></tr>';
+                } else {
+                    data.transactions.forEach(transaction => {
+                        const row = document.createElement('tr');
+                        const typeClass = transaction.transaction_type === 'stock_in' ? 'text-success' : 'text-danger';
+                        row.innerHTML = `
+                            <td>${new Date(transaction.created_at).toLocaleString()}</td>
+                            <td><span class="badge bg-primary">${transaction.transaction_type.replace('_', ' ').toUpperCase()}</span></td>
+                            <td class="${typeClass}">${transaction.quantity}</td>
+                            <td>₱${parseFloat(transaction.unit_price).toFixed(2)}</td>
+                            <td>₱${(transaction.quantity * transaction.unit_price).toFixed(2)}</td>
+                            <td>${transaction.notes || '-'}</td>
+                            <td>${transaction.created_by || 'System'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('transactionModal')).show();
+            } else {
+                alert('Error loading transactions: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load transaction history');
+        });
+}
+
+function adjustStock(itemId) {
+    // Fetch item details and show stock adjustment modal
+    fetch(`/admin-inventory/get-item/${itemId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const item = data.item;
+                document.getElementById('adjustItemId').value = item.id;
+                document.getElementById('adjustItemName').textContent = item.name;
+                document.getElementById('adjustCurrentStock').textContent = `${item.current_stock} ${item.unit}`;
+                
+                // Reset form
+                document.getElementById('adjustmentType').value = '';
+                document.getElementById('adjustQuantity').value = '';
+                document.getElementById('adjustReason').value = '';
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('stockAdjustModal')).show();
+            } else {
+                alert('Error loading item details: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load item details');
+        });
+}
+
+function exportInventory() {
+    // TODO: Implement export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Form submission
+document.getElementById('addItemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the item.');
+    });
+});
+
+// Edit Item Form submission
+document.getElementById('editItemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the item.');
+    });
+});
+
+// Stock Adjustment Form submission
+document.getElementById('stockAdjustForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('stockAdjustModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adjusting stock.');
+    });
+});
+</script>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

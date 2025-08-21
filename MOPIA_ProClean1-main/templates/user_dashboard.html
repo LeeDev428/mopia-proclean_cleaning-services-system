@@ -869,6 +869,7 @@
                                                 <th>Price</th>
                                                 <th>Your Note</th>
                                                 <th>Service Note</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -919,6 +920,31 @@
                                                     {% else %}
                                                         <span class="text-muted">-</span>
                                                     {% endif %}
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary view-booking-details-btn" 
+                                                            data-booking-id="{{ booking.id }}"
+                                                            data-customer-name="{{ booking.customer.name }}"
+                                                            data-customer-email="{{ booking.customer.email }}"
+                                                            data-customer-phone="{{ booking.customer.phone }}"
+                                                            data-customer-address="{{ booking.customer.address }}"
+                                                            data-service-name="{{ booking.service.name }}"
+                                                            data-service-price="{{ booking.service.price }}"
+                                                            data-booking-date="{{ booking.date|date:'M d, Y' }}"
+                                                            data-booking-time="{{ booking.time|time:'g:i A' }}"
+                                                            data-booking-status="{{ booking.status }}"
+                                                            data-user-note="{{ booking.user_note|default:'' }}"
+                                                            data-admin-note="{{ booking.admin_note|default:'' }}"
+                                                            data-payment-method="{{ booking.payment_method|default:'' }}"
+                                                            data-reference-number="{{ booking.reference_number|default:'' }}"
+                                                            data-downpayment-amount="{{ booking.downpayment_amount|default:'0.00' }}"
+                                                            data-downpayment-verified="{{ booking.is_downpayment_confirmed|yesno:'true,false' }}"
+                                                            data-full-payment-verified="{{ booking.is_full_payment_confirmed|yesno:'true,false' }}"
+                                                            data-created-at="{{ booking.created_at|date:'M d, Y g:i A' }}"
+                                                            data-before-photo="{% if booking.before_photo and booking.before_photo.name %}{{ booking.before_photo.url }}{% endif %}"
+                                                            data-after-photo="{% if booking.after_photo and booking.after_photo.name %}{{ booking.after_photo.url }}{% endif %}">
+                                                        <i class="bi bi-info-circle-fill me-1"></i> View Details
+                                                    </button>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1105,6 +1131,154 @@
         </div>
     </div>
 </div>
+
+<!-- User Booking Details Modal -->
+<div class="modal fade" id="userBookingDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle-fill me-2"></i>Booking Details #<span id="user-detail-booking-id"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Customer Information -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-person-fill me-2"></i>Customer Information
+                        </h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td id="user-detail-customer-name"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td id="user-detail-customer-email"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td id="user-detail-customer-phone"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Address:</strong></td>
+                                <td id="user-detail-customer-address"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Service Information -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-success mb-3">
+                            <i class="bi bi-tools me-2"></i>Service Information
+                        </h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Service:</strong></td>
+                                <td id="user-detail-service-name"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td id="user-detail-booking-date"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Time:</strong></td>
+                                <td id="user-detail-booking-time"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Price:</strong></td>
+                                <td id="user-detail-service-price"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span id="user-detail-booking-status" class="badge"></span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h6 class="text-warning mb-3">
+                            <i class="bi bi-credit-card-fill me-2"></i>Payment Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Method:</strong> <span id="user-detail-payment-method"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Ref No.:</strong> <code id="user-detail-reference-number"></code>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Downpayment:</strong> ₱<span id="user-detail-downpayment-amount"></span>
+                                <span id="user-detail-payment-status" class="badge ms-2"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Full Payment:</strong> 
+                                <span id="user-detail-full-payment-status" class="badge ms-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes Section -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-info mb-3">
+                            <i class="bi bi-chat-left-text me-2"></i>Your Note
+                        </h6>
+                        <div id="user-detail-user-note-section" style="display: none;">
+                            <div class="alert alert-light border">
+                                <span id="user-detail-user-note"></span>
+                            </div>
+                        </div>
+                        <div id="user-detail-no-user-note" class="text-muted">No note provided.</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <h6 class="text-warning mb-3">
+                            <i class="bi bi-exclamation-circle me-2"></i>Service Note
+                        </h6>
+                        <div id="user-detail-admin-note-section" style="display: none;">
+                            <div class="alert alert-warning">
+                                <span id="user-detail-admin-note"></span>
+                            </div>
+                        </div>
+                        <div id="user-detail-no-admin-note" class="text-muted">No service note.</div>
+                    </div>
+                </div>
+                
+                <!-- Photos Section -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h6 class="text-secondary mb-3">
+                            <i class="bi bi-camera-fill me-2"></i>Service Photos
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Before Cleaning</h6>
+                                <img id="user-detail-before-photo" src="" alt="Before Photo" class="img-fluid rounded" style="max-height: 200px; display: none;">
+                                <p id="user-detail-no-before-photo" class="text-muted">No before photo available.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>After Cleaning</h6>
+                                <img id="user-detail-after-photo" src="" alt="After Photo" class="img-fluid rounded" style="max-height: 200px; display: none;">
+                                <p id="user-detail-no-after-photo" class="text-muted">No after photo available.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 
@@ -1646,6 +1820,129 @@
         
         // Then check periodically every 10 seconds
         setInterval(checkForNewNotifications, 10000);
+        
+        // Handle View Booking Details button clicks
+        document.querySelectorAll('.view-booking-details-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookingId = this.getAttribute('data-booking-id');
+                const customerName = this.getAttribute('data-customer-name');
+                const customerEmail = this.getAttribute('data-customer-email');
+                const customerPhone = this.getAttribute('data-customer-phone');
+                const customerAddress = this.getAttribute('data-customer-address');
+                const serviceName = this.getAttribute('data-service-name');
+                const servicePrice = this.getAttribute('data-service-price');
+                const bookingDate = this.getAttribute('data-booking-date');
+                const bookingTime = this.getAttribute('data-booking-time');
+                const bookingStatus = this.getAttribute('data-booking-status');
+                const userNote = this.getAttribute('data-user-note');
+                const adminNote = this.getAttribute('data-admin-note');
+                const paymentMethod = this.getAttribute('data-payment-method');
+                const referenceNumber = this.getAttribute('data-reference-number');
+                const downpaymentAmount = this.getAttribute('data-downpayment-amount');
+                const downpaymentVerified = this.getAttribute('data-downpayment-verified') === 'true';
+                const fullPaymentVerified = this.getAttribute('data-full-payment-verified') === 'true';
+                const createdAt = this.getAttribute('data-created-at');
+                const beforePhoto = this.getAttribute('data-before-photo');
+                const afterPhoto = this.getAttribute('data-after-photo');
+                
+                // Populate modal with booking details
+                document.getElementById('user-detail-booking-id').textContent = bookingId;
+                document.getElementById('user-detail-customer-name').textContent = customerName;
+                document.getElementById('user-detail-customer-email').textContent = customerEmail;
+                document.getElementById('user-detail-customer-phone').textContent = customerPhone || 'Not provided';
+                document.getElementById('user-detail-customer-address').textContent = customerAddress;
+                document.getElementById('user-detail-service-name').textContent = serviceName;
+                document.getElementById('user-detail-booking-date').textContent = bookingDate;
+                document.getElementById('user-detail-booking-time').textContent = bookingTime;
+                document.getElementById('user-detail-service-price').textContent = '₱' + servicePrice;
+                
+                // Set status badge with appropriate styling
+                const statusBadge = document.getElementById('user-detail-booking-status');
+                statusBadge.textContent = bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1);
+                statusBadge.className = `badge status-${bookingStatus}`;
+                
+                // Payment information
+                document.getElementById('user-detail-payment-method').textContent = paymentMethod || 'Not provided';
+                document.getElementById('user-detail-reference-number').textContent = referenceNumber || 'Not provided';
+                document.getElementById('user-detail-downpayment-amount').textContent = downpaymentAmount;
+                
+                // Payment verification status
+                const paymentStatusBadge = document.getElementById('user-detail-payment-status');
+                if (downpaymentVerified) {
+                    paymentStatusBadge.textContent = '✓ Verified';
+                    paymentStatusBadge.className = 'badge bg-success ms-2';
+                } else {
+                    paymentStatusBadge.textContent = '⏳ Pending';
+                    paymentStatusBadge.className = 'badge bg-warning ms-2';
+                }
+                
+                // Full payment status
+                const fullPaymentStatusBadge = document.getElementById('user-detail-full-payment-status');
+                if (fullPaymentVerified) {
+                    fullPaymentStatusBadge.textContent = '✓ Full Payment Confirmed';
+                    fullPaymentStatusBadge.className = 'badge bg-success ms-2';
+                } else {
+                    fullPaymentStatusBadge.textContent = '⏳ Full Payment Pending';
+                    fullPaymentStatusBadge.className = 'badge bg-warning ms-2';
+                }
+                
+                // Handle notes display
+                const userNoteSection = document.getElementById('user-detail-user-note-section');
+                const noUserNoteElement = document.getElementById('user-detail-no-user-note');
+                const adminNoteSection = document.getElementById('user-detail-admin-note-section');
+                const noAdminNoteElement = document.getElementById('user-detail-no-admin-note');
+                
+                // User note
+                if (userNote && userNote.trim()) {
+                    document.getElementById('user-detail-user-note').textContent = userNote;
+                    userNoteSection.style.display = 'block';
+                    noUserNoteElement.style.display = 'none';
+                } else {
+                    userNoteSection.style.display = 'none';
+                    noUserNoteElement.style.display = 'block';
+                }
+                
+                // Admin note
+                if (adminNote && adminNote.trim()) {
+                    document.getElementById('user-detail-admin-note').textContent = adminNote;
+                    adminNoteSection.style.display = 'block';
+                    noAdminNoteElement.style.display = 'none';
+                } else {
+                    adminNoteSection.style.display = 'none';
+                    noAdminNoteElement.style.display = 'block';
+                }
+                
+                // Handle photos display
+                const beforePhotoElement = document.getElementById('user-detail-before-photo');
+                const noBeforePhotoElement = document.getElementById('user-detail-no-before-photo');
+                const afterPhotoElement = document.getElementById('user-detail-after-photo');
+                const noAfterPhotoElement = document.getElementById('user-detail-no-after-photo');
+                
+                // Show before photo if exists
+                if (beforePhoto && beforePhoto.trim()) {
+                    beforePhotoElement.src = beforePhoto;
+                    beforePhotoElement.style.display = 'block';
+                    noBeforePhotoElement.style.display = 'none';
+                } else {
+                    beforePhotoElement.style.display = 'none';
+                    noBeforePhotoElement.style.display = 'block';
+                }
+                
+                // Show after photo if exists
+                if (afterPhoto && afterPhoto.trim()) {
+                    afterPhotoElement.src = afterPhoto;
+                    afterPhotoElement.style.display = 'block';
+                    noAfterPhotoElement.style.display = 'none';
+                } else {
+                    afterPhotoElement.style.display = 'none';
+                    noAfterPhotoElement.style.display = 'block';
+                }
+                
+                // Show the modal
+                const detailsModal = new bootstrap.Modal(document.getElementById('userBookingDetailsModal'));
+                detailsModal.show();
+            });
+        });
     });
 </script>
 
