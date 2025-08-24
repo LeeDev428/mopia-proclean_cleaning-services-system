@@ -2835,7 +2835,6 @@ def admin_inventory(request):
                     item=item,
                     transaction_type=adjustment_type,
                     quantity=quantity if adjustment_type != 'adjustment' else abs(quantity - (item.current_stock - quantity)),
-                    unit_price=item.unit_cost,
                     notes=reason,
                     created_by=request.user
                 )
@@ -2884,7 +2883,6 @@ def admin_inventory(request):
                         item=item,
                         transaction_type='stock_in',
                         quantity=current_stock,
-                        unit_price=unit_cost,
                         notes=f'Initial stock for {name}',
                         created_by=request.user
                     )
@@ -2972,7 +2970,7 @@ def admin_inventory_transactions(request, item_id):
                 'created_at': transaction.created_at.isoformat(),
                 'transaction_type': transaction.transaction_type,
                 'quantity': transaction.quantity,
-                'unit_price': float(transaction.unit_price),
+                'unit_price': float(item.unit_cost),
                 'notes': transaction.notes,
                 'created_by': transaction.created_by.get_full_name() if transaction.created_by else 'System'
             })
